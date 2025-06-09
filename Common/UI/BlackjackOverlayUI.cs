@@ -57,7 +57,7 @@ namespace Blackjack.Common.UI
             SetRectangle(hitButton, left: boxWidth / 2 - 44f, top: boxHeight - 96f, width: 88f, height: 88f);
             hitButton.OnLeftClick += (evt, element) =>
             {
-                SoundEngine.PlaySound(SoundID.MenuTick);
+                SoundEngine.PlaySound(SoundID.Item37); // Reforge sound
                 blackjackGame.DealCard();
             };
 
@@ -67,7 +67,7 @@ namespace Blackjack.Common.UI
             SetRectangle(standButton, left: boxWidth / 2 + 62f, top: boxHeight - 96f, width: 88f, height: 88f);
             standButton.OnLeftClick += (evt, element) =>
             {
-                SoundEngine.PlaySound(SoundID.MenuTick);
+                SoundEngine.PlaySound(SoundID.Item144); // Cymbal sound
                 // Upon standing, execute dealer logic
                 blackjackGame.DealerLogic();
             };
@@ -132,8 +132,9 @@ namespace Blackjack.Common.UI
             private List<int> cardList;
             private int cardIndex = 0;
 
-            private List<int> yourCards = new List<int>();
+            private List<int> playerCards = new List<int>();
             private List<int> dealerCards = new List<int>();
+            private bool dealerFirstCardRevealed = false;
 
             private int playerHandValue = 0;
             private int dealerHandValue = 0;
@@ -181,15 +182,16 @@ namespace Blackjack.Common.UI
                 isGameActive = true;
 
                 // Deal one card to player and one to dealer and repeat
-                yourCards.Clear();
+                playerCards.Clear();
                 dealerCards.Clear();
                 for (int i = 0; i < 2; i++)
                 {
                     if (cardIndex < cardList.Count)
-                        yourCards.Add(cardList[cardIndex++]);
+                        playerCards.Add(cardList[cardIndex++]);
                     if (cardIndex < cardList.Count)
                         dealerCards.Add(cardList[cardIndex++]);
                 }
+                dealerFirstCardRevealed = false;
 
                 // Calculate hand values
                 CalculateHandValues();
@@ -204,22 +206,30 @@ namespace Blackjack.Common.UI
                 }
                 else 
                 {
-                    yourCards.Add(cardList[cardIndex++]);
+                    playerCards.Add(cardList[cardIndex++]);
                 }
 
                 // Calculate hand values
                 CalculateHandValues();
 
-                // Check for bust
+                // Check for bust or 21
                 if (playerHandValue > 21)
                 {
                     Main.NewText("You busted! Dealer wins.");
                     isGameActive = false;
+                    dealerFirstCardRevealed = true;
+                }
+                else if (playerHandValue == 21)
+                {
+                    DealerLogic();
                 }
             }
 
             public void DealerLogic()
             {
+                // Reveal first card
+                dealerFirstCardRevealed = true;
+
                 // Hit on soft 17
                 while (dealerHandValue < 17 || (dealerHandValue == 17 && dealerCards.Exists(card => card % 13 == 0)))
                 {
@@ -246,27 +256,30 @@ namespace Blackjack.Common.UI
 
             private void CalculateHandValues()
             {
-                playerHandValue = CalculateValue(yourCards);
+                playerHandValue = CalculateValue(playerCards);
                 dealerHandValue = CalculateValue(dealerCards);
 
                 // Check for automatic push due to both the player and dealer having 21 with two cards
-                if (yourCards.Count == 2 && dealerCards.Count == 2 && playerHandValue == 21 && dealerHandValue == 21)
+                if (playerCards.Count == 2 && dealerCards.Count == 2 && playerHandValue == 21 && dealerHandValue == 21)
                 {
                     Main.NewText("Push! Both you and the dealer have Blackjack.");
                     isGameActive = false;
+                    dealerFirstCardRevealed = true;
                 }
-                // Otherwise, check for player or dealer blackjack
-                else if (playerHandValue == 21)
+                // Then, check for player natural
+                else if (playerCards.Count == 2 && playerHandValue == 21)
                 {
                     Main.NewText("Blackjack!");
                     playerMoney += (int)(playerMoney * 1.5);
                     isGameActive = false;
+                    dealerFirstCardRevealed = true;
                 }
-                else if (dealerHandValue == 21)
+                else if (dealerCards.Count == 2 && dealerHandValue == 21)
                 {
                     Main.NewText("Dealer has Blackjack! You lose.");
                     playerMoney -= playerMoney;
                     isGameActive = false;
+                    dealerFirstCardRevealed = true;
                 }
             }
 
@@ -316,9 +329,19 @@ namespace Blackjack.Common.UI
                 string playerText = "Current bet: " + playerMoney;
                 spriteBatch.DrawString(font, playerText, position + new Vector2(10, 600), Color.White);
 
-                // Render statuses if game is active
+                // Dealer status messages
                 string dealerStatus1 = "Dealer's hand: ";
-                string dealerStatus2 = dealerHandValue.ToString();
+                string dealerStatus2;
+                if (isGameActive && !dealerFirstCardRevealed)
+                {
+                    dealerStatus2 = (dealerCards[1] % 13 >= 10 ? 10 : (dealerCards[1] % 13) + 1).ToString() + " + ???";
+                }
+                else
+                {
+                    dealerStatus2 = dealerHandValue.ToString();
+                }
+
+                // Player status messages
                 string playerStatus1 = "Your hand: ";
                 string playerStatus2 = playerHandValue.ToString();
 
@@ -328,10 +351,10 @@ namespace Blackjack.Common.UI
                 spriteBatch.DrawString(font, playerStatus2, position + new Vector2(10, 365), Color.Yellow);
 
                 // Render player cards
-                for (int i = 0; i < yourCards.Count; i++)
+                for (int i = 0; i < playerCards.Count; i++)
                 {
                     // Get card texture
-                    int cardIndex = yourCards[i];
+                    int cardIndex = playerCards[i];
                     Asset<Texture2D> cardTextureAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{cardIndex}");
 
                     // Create small rectangle to draw the card in
@@ -346,12 +369,24 @@ namespace Blackjack.Common.UI
                 {
                     // Get card texture
                     int cardIndex = dealerCards[i];
-                    Asset<Texture2D> cardTextureAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{cardIndex}");
+                    Asset<Texture2D> cardBackAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_back");
+                    Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{cardIndex}");
+                    Texture2D cardTexture;
+
+                    // Hide first card logic
+                    if (i == 0 && !dealerFirstCardRevealed)
+                    {
+                        cardTexture = cardBackAsset.Value;
+                    }
+                    else
+                    {
+                        cardTexture = cardFrontAsset.Value;
+                    }
 
                     // Create small rectangle to draw the card in
                     Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 80, 90, 135);
 
-                    spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
+                    spriteBatch.Draw(cardTexture, cardRectangle, Color.White);
                 }
             }
         }
