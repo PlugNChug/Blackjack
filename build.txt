@@ -1,0 +1,3 @@
+displayName = Blackjack
+author = PlugNChug
+version = 0.1
