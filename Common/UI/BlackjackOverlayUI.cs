@@ -47,7 +47,7 @@ namespace Blackjack.Common.UI
             // Play button
             Asset<Texture2D> buttonPlayTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonPlay");
             playButton = new UIHoverImageButton(buttonPlayTexture, "Play");
-            SetRectangle(playButton, left: boxWidth / 2 - 150f, top: boxHeight - 96f, width: 88f, height: 88f);
+            SetRectangle(playButton, left: boxWidth - 96f, top: boxHeight - 96f, width: 88f, height: 88f);
             playButton.OnLeftClick += new MouseEvent(PlayButtonClicked);
             BlackjackPanel.Append(playButton);
 
@@ -119,6 +119,7 @@ namespace Blackjack.Common.UI
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
+
             if (!blackjackGame.GetActiveGame())
             {
                 DeactivateButtons();
@@ -206,9 +207,6 @@ namespace Blackjack.Common.UI
                     yourCards.Add(cardList[cardIndex++]);
                 }
 
-                // Debug text using in-game chat
-                Main.NewText("You got: " + string.Join(", ", yourCards) + ".");
-
                 // Calculate hand values
                 CalculateHandValues();
 
@@ -216,6 +214,7 @@ namespace Blackjack.Common.UI
                 if (playerHandValue > 21)
                 {
                     Main.NewText("You busted! Dealer wins.");
+                    isGameActive = false;
                 }
             }
 
@@ -256,7 +255,19 @@ namespace Blackjack.Common.UI
                     Main.NewText("Push! Both you and the dealer have Blackjack.");
                     isGameActive = false;
                 }
-                // Then,
+                // Otherwise, check for player or dealer blackjack
+                else if (playerHandValue == 21)
+                {
+                    Main.NewText("Blackjack!");
+                    playerMoney += (int)(playerMoney * 1.5);
+                    isGameActive = false;
+                }
+                else if (dealerHandValue == 21)
+                {
+                    Main.NewText("Dealer has Blackjack! You lose.");
+                    playerMoney -= playerMoney;
+                    isGameActive = false;
+                }
             }
 
             private int CalculateValue(List<int> hand)
@@ -303,20 +314,18 @@ namespace Blackjack.Common.UI
 
                 // Render player info
                 string playerText = "Current bet: " + playerMoney;
-                spriteBatch.DrawString(font, playerText, position + new Vector2(10, 500), Color.White);
+                spriteBatch.DrawString(font, playerText, position + new Vector2(10, 600), Color.White);
 
                 // Render statuses if game is active
                 string dealerStatus1 = "Dealer's hand: ";
                 string dealerStatus2 = dealerHandValue.ToString();
                 string playerStatus1 = "Your hand: ";
                 string playerStatus2 = playerHandValue.ToString();
-                if (isGameActive)
-                {
-                    spriteBatch.DrawString(font, dealerStatus1, position + new Vector2(10, 30), Color.White);
-                    spriteBatch.DrawString(font, dealerStatus2, position + new Vector2(10, 30), Color.Yellow);
-                    spriteBatch.DrawString(font, playerStatus1, position + new Vector2(10, 350), Color.White);
-                    spriteBatch.DrawString(font, playerStatus2, position + new Vector2(10, 350), Color.Yellow);
-                }
+
+                spriteBatch.DrawString(font, dealerStatus1, position + new Vector2(10, 30), Color.White);
+                spriteBatch.DrawString(font, dealerStatus2, position + new Vector2(10, 45), Color.Yellow);
+                spriteBatch.DrawString(font, playerStatus1, position + new Vector2(10, 350), Color.White);
+                spriteBatch.DrawString(font, playerStatus2, position + new Vector2(10, 365), Color.Yellow);
 
                 // Render player cards
                 for (int i = 0; i < yourCards.Count; i++)
