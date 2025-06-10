@@ -14,6 +14,9 @@ using Terraria.UI;
 
 namespace Blackjack.Common.UI
 {
+    // Main UIState that houses the draggable panel and game logic.
+    // This state is only loaded on the client and manages all
+    // user interface elements for the blackjack mini-game.
     internal class BlackjackOverlayUIState : UIState
     {
         public DraggableUIPanel BlackjackPanel;
@@ -82,13 +85,14 @@ namespace Blackjack.Common.UI
         }
 
         /// <summary>
-        /// Create a rectangle out of the parameters
+        /// Helper method to set the position and size of a UIElement.
+        /// Using absolute pixel values keeps layout predictable.
         /// </summary>
-        /// <param name="uiElement"></param>
-        /// <param name="left"></param>
-        /// <param name="top"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
+        /// <param name="uiElement">The element being positioned</param>
+        /// <param name="left">Pixel offset from the left of the screen</param>
+        /// <param name="top">Pixel offset from the top of the screen</param>
+        /// <param name="width">Width in pixels</param>
+        /// <param name="height">Height in pixels</param>
         private void SetRectangle(UIElement uiElement, float left, float top, float width, float height)
         {
             uiElement.Left.Set(left, 0f);
@@ -176,30 +180,39 @@ namespace Blackjack.Common.UI
         /// </summary>
         public class DealingCard
         {
+            // Index in the deck that identifies which card image to draw
             public int CardIndex;
+            // Starting position of the animation
             public Vector2 StartPos;
+            // Final destination when the card reaches the table
             public Vector2 EndPos;
-            public float Progress; // 0.0 to 1.0
-            public bool ToPlayer; // true = player, false = dealer
+            // Progress of the animation from 0 (start) to 1 (finished)
+            public float Progress;
+            // Determines if the card is dealt to the player or the dealer
+            public bool ToPlayer;
         }
 
         /// <summary>
-        /// The actual blackjack session as a UIElement.
+        /// UIElement representing a single blackjack game session.
+        /// Handles card shuffling, dealing, drawing and determining winners.
         /// </summary>
         public class BlackjackGame : UIElement
         {
+            // Amount of money the player has for betting
             private int playerMoney;
 
-            // Card list initialization
+            // Holds a numeric representation of a standard 52 card deck
             private List<int> cardList;
+            // Tracks which card to draw next from the shuffled deck
             private int cardIndex = 0;
 
             // Player/dealer card fields
+            // Lists storing each card currently held by the player and dealer
             private List<int> playerCards = new List<int>();
             private List<int> dealerCards = new List<int>();
-            private bool dealerFirstCardRevealed = false;
-            private bool flippingDealerCard = false;
-            private float dealerCardFlipProgress = 0f;
+            private bool dealerFirstCardRevealed = false; // Has the dealer's first card been shown
+            private bool flippingDealerCard = false;       // Is the reveal animation running
+            private float dealerCardFlipProgress = 0f;      // Animation progress value
             private const float dealerCardFlipSpeed = 0.15f;
 
             // Hand values for calculations
@@ -210,17 +223,22 @@ namespace Blackjack.Common.UI
             private bool isGameActive = false;
 
             // Animation fields
+            // Cards waiting to be animated onto the table
             private Queue<DealingCard> dealingQueue = new Queue<DealingCard>();
+            // Card currently in transit
             private DealingCard currentDealingCard = null;
+            // Speed at which cards slide to their destination
             private float dealSpeed = 0.08f; // Adjust for faster/slower animation
 
-            private bool dealerTurn = false;
-            private int dealerDrawDelayTimer = 0;
-            private const int DealerDrawDelay = 30; // frames of delay between dealer draws
+            private bool dealerTurn = false;       // True when the dealer is drawing
+            private int dealerDrawDelayTimer = 0;  // Countdown before the next dealer draw
+            private const int DealerDrawDelay = 30; // Frames of delay between dealer draws
 
 
+            // Returns true if a game is currently in progress
             public bool GetActiveGame() => isGameActive;
 
+            // True while a card animation is occurring
             public bool IsAnimating => currentDealingCard != null || dealingQueue.Count > 0;
 
             public override void OnInitialize()
@@ -238,9 +256,10 @@ namespace Blackjack.Common.UI
 
             public void ShuffleCards()
             {
+                // Randomly shuffle the deck before a new game starts
                 Random rng = new Random();
                 int n = cardList.Count;
-                // Fisher-Yates shuffle algorithm
+                // Classic Fisher–Yates shuffle algorithm
                 while (n > 1)
                 {
                     int k = rng.Next(n--);
@@ -255,6 +274,8 @@ namespace Blackjack.Common.UI
 
             public void InitialDeal()
             {
+                // Called when the player presses Play.
+                // Sets up the hands and deals the opening two cards.
                 // Set game as active
                 isGameActive = true;
 
@@ -296,6 +317,7 @@ namespace Blackjack.Common.UI
 
             public void DealerLogic()
             {
+                // Called when the player stands. Begins the dealer's drawing phase.
                 dealerTurn = true;
                 dealerDrawDelayTimer = DealerDrawDelay;
                 StartDealerFlip();
@@ -304,6 +326,7 @@ namespace Blackjack.Common.UI
 
             private void TryQueueDealerCard()
             {
+                // Handles the dealer drawing additional cards while respecting a small delay between draws
                 if (dealerDrawDelayTimer > 0)
                 {
                     dealerDrawDelayTimer--;
@@ -329,6 +352,7 @@ namespace Blackjack.Common.UI
 
             private void DetermineWinner()
             {
+                // Compare hand values and announce the result
                 StartDealerFlip();
                 if (dealerHandValue > 21 || playerHandValue > dealerHandValue)
                 {
@@ -347,6 +371,7 @@ namespace Blackjack.Common.UI
 
             private void StartDealerFlip()
             {
+                // Begins the animation that reveals the dealer's hidden card
                 if (flippingDealerCard || dealerFirstCardRevealed)
                     return;
                 flippingDealerCard = true;
@@ -355,6 +380,7 @@ namespace Blackjack.Common.UI
 
             private void CalculateHandValues()
             {
+                // Update cached totals for both hands
                 playerHandValue = CalculateValue(playerCards);
                 dealerHandValue = CalculateValue(dealerCards);
 
@@ -387,6 +413,7 @@ namespace Blackjack.Common.UI
 
             private int CalculateValue(List<int> hand)
             {
+                // Computes the best numeric value for a list of cards
                 int value = 0;
                 int aceCount = 0;
 
