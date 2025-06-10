@@ -126,20 +126,40 @@ namespace Blackjack.Common.UI
             }
         }
 
+        public class DealingCard
+        {
+            public int CardIndex;
+            public Vector2 StartPos;
+            public Vector2 EndPos;
+            public float Progress; // 0.0 to 1.0
+            public bool ToPlayer; // true = player, false = dealer
+        }
+
         public class BlackjackGame : UIElement
         {
             private int playerMoney;
+
+            // Card list initialization
             private List<int> cardList;
             private int cardIndex = 0;
 
+            // Player/dealer card fields
             private List<int> playerCards = new List<int>();
             private List<int> dealerCards = new List<int>();
             private bool dealerFirstCardRevealed = false;
 
+            // Hand values for calculations
             private int playerHandValue = 0;
             private int dealerHandValue = 0;
 
+            // Active game boolean
             private bool isGameActive = false;
+
+            // Animation fields
+            private Queue<DealingCard> dealingQueue = new Queue<DealingCard>();
+            private DealingCard currentDealingCard = null;
+            private float dealSpeed = 0.08f; // Adjust for faster/slower animation
+
 
             public bool GetActiveGame()
             {
@@ -187,9 +207,15 @@ namespace Blackjack.Common.UI
                 for (int i = 0; i < 2; i++)
                 {
                     if (cardIndex < cardList.Count)
-                        playerCards.Add(cardList[cardIndex++]);
-                    if (cardIndex < cardList.Count)
-                        dealerCards.Add(cardList[cardIndex++]);
+                    {
+                        int playerCard = cardList[cardIndex++];
+                        Vector2 playerEndPos = new Vector2(10 + i * 150, 400);
+                        QueueDealCard(playerCard, true, playerEndPos);
+
+                        int dealerCard = cardList[cardIndex++];
+                        Vector2 dealerEndPos = new Vector2(10 + i * 150, 80);
+                        QueueDealCard(dealerCard, false, dealerEndPos);
+                    }
                 }
                 dealerFirstCardRevealed = false;
 
@@ -199,14 +225,12 @@ namespace Blackjack.Common.UI
 
             public void DealCard()
             {
-                // Deal one card to the player
-                if (cardIndex >= cardList.Count)
+                // Deal one card
+                if (cardIndex < cardList.Count)
                 {
-                    Main.NewText("No more cards in the deck!");
-                }
-                else 
-                {
-                    playerCards.Add(cardList[cardIndex++]);
+                    int card = cardList[cardIndex++];
+                    Vector2 endPos = new Vector2(10 + playerCards.Count * 150, 400); // Match your draw positions
+                    QueueDealCard(card, true, endPos);
                 }
 
                 // Calculate hand values
@@ -316,6 +340,18 @@ namespace Blackjack.Common.UI
                 return value;
             }
 
+            private void QueueDealCard(int cardIndex, bool toPlayer, Vector2 endPos)
+            {
+                dealingQueue.Enqueue(new DealingCard
+                {
+                    CardIndex = cardIndex,
+                    StartPos = new Vector2(GetDimensions().X + 800, GetDimensions().Y + 250),
+                    EndPos = endPos,
+                    Progress = 0f,
+                    ToPlayer = toPlayer
+                });
+            }
+
             protected override void DrawSelf(SpriteBatch spriteBatch)
             {
                 base.DrawSelf(spriteBatch);
@@ -332,9 +368,13 @@ namespace Blackjack.Common.UI
                 // Dealer status messages
                 string dealerStatus1 = "Dealer's hand: ";
                 string dealerStatus2;
-                if (isGameActive && !dealerFirstCardRevealed)
+                if (isGameActive && !dealerFirstCardRevealed && dealerCards.Count > 1)
                 {
                     dealerStatus2 = (dealerCards[1] % 13 >= 10 ? 10 : (dealerCards[1] % 13) + 1).ToString() + " + ???";
+                }
+                else if (dealerCards.Count <= 1)
+                {
+                    dealerStatus2 = "...";
                 }
                 else
                 {
@@ -358,7 +398,7 @@ namespace Blackjack.Common.UI
                     Asset<Texture2D> cardTextureAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{cardIndex}");
 
                     // Create small rectangle to draw the card in
-                    Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 400, 90, 135);
+                    Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 400, 90, 128);
 
                     spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
                     
@@ -384,11 +424,58 @@ namespace Blackjack.Common.UI
                     }
 
                     // Create small rectangle to draw the card in
-                    Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 80, 90, 135);
+                    Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 80, 90, 128);
 
                     spriteBatch.Draw(cardTexture, cardRectangle, Color.White);
                 }
+
+
+                // Draw animated card
+                if (currentDealingCard != null)
+                {
+                    Vector2 pos = Vector2.Lerp(
+                        currentDealingCard.StartPos,
+                        currentDealingCard.EndPos,
+                        currentDealingCard.Progress
+                    );
+                    Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{currentDealingCard.CardIndex}");
+                    Rectangle cardRectangle = new Rectangle((int)pos.X, (int)pos.Y, 90, 128);
+                    spriteBatch.Draw(cardFrontAsset.Value, cardRectangle, Color.White);
+                }
+
+                // Draw the card stack
+                Asset<Texture2D> cardStackAsset = ModContent.Request<Texture2D>("Blackjack/Assets/Cards/card_stack");
+                Rectangle stackRectangle = new Rectangle((int)position.X + 800, (int)position.Y + 250, 90, 135);
+                spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
+
             }
+
+            public override void Update(GameTime gameTime)
+            {
+                base.Update(gameTime);
+
+                if (currentDealingCard == null && dealingQueue.Count > 0)
+                {
+                    currentDealingCard = dealingQueue.Dequeue();
+                }
+
+                if (currentDealingCard != null)
+                {
+                    currentDealingCard.Progress += dealSpeed;
+                    if (currentDealingCard.Progress >= 1f)
+                    {
+                        // Animation done, add to hand
+                        if (currentDealingCard.ToPlayer)
+                            playerCards.Add(currentDealingCard.CardIndex);
+                        else
+                            dealerCards.Add(currentDealingCard.CardIndex);
+
+                        CalculateHandValues();
+                        currentDealingCard = null;
+                    }
+                }
+            }
+
         }
     }
 }
