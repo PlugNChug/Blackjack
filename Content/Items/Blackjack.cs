@@ -28,21 +28,24 @@ namespace Blackjack.Content.Items
 			Item.UseSound = SoundID.Item1; // The sound when the weapon is being used.
 		}
 
+        // When the item is used, display the blackjack interface
         public override void UseAnimation(Player player)
         {
             ModContent.GetInstance<BlackjackOverlayUISystem>().ShowUI();
         }
 
+        // Basic melee effect: set enemies on fire when struck
         public override void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damageDone) {
-			// Inflict the OnFire debuff for 1 second onto any NPC/Monster that this hits.
-			// 60 frames = 1 second
-			target.AddBuff(BuffID.OnFire, 60);
-		}
+                        // Inflict the OnFire debuff for 1 second onto any NPC/Monster that this hits.
+                        // 60 frames = 1 second
+                        target.AddBuff(BuffID.OnFire, 60);
+                }
 
-		public override void AddRecipes() {
-			CreateRecipe()
-				.AddIngredient(ItemID.Wood, 10)
-				.Register();
-		}
+                // Simple recipe so the item can be crafted during testing
+                public override void AddRecipes() {
+                        CreateRecipe()
+                                .AddIngredient(ItemID.Wood, 10)
+                                .Register();
+                }
 	}
 }

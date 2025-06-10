@@ -9,6 +9,7 @@ namespace Blackjack.Common.UI
 
     [Autoload(Side = ModSide.Client)]
 
+    // System responsible for loading and updating the blackjack user interface.
     public class BlackjackOverlayUISystem : ModSystem
     {
         private UserInterface blackjackInterface;
