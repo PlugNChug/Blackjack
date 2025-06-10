@@ -7,9 +7,10 @@ using Terraria.ModLoader;
 
 namespace Blackjack
 {
-	// Please read https://github.com/tModLoader/tModLoader/wiki/Basic-tModLoader-Modding-Guide#mod-skeleton-contents for more information about the various files in a mod.
-	public class Blackjack : Mod
-	{
+        // Main mod class. Currently only acts as a container for assets and systems.
+        // See tModLoader documentation for additional mod setup details.
+        public class Blackjack : Mod
+        {
 
-	}
+        }
 }
