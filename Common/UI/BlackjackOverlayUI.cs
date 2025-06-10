@@ -57,6 +57,8 @@ namespace Blackjack.Common.UI
             SetRectangle(hitButton, left: boxWidth / 2 - 44f, top: boxHeight - 96f, width: 88f, height: 88f);
             hitButton.OnLeftClick += (evt, element) =>
             {
+                if (blackjackGame.IsAnimating)
+                    return;
                 SoundEngine.PlaySound(SoundID.Item37); // Reforge sound
                 blackjackGame.DealCard();
             };
@@ -67,6 +69,8 @@ namespace Blackjack.Common.UI
             SetRectangle(standButton, left: boxWidth / 2 + 62f, top: boxHeight - 96f, width: 88f, height: 88f);
             standButton.OnLeftClick += (evt, element) =>
             {
+                if (blackjackGame.IsAnimating)
+                    return;
                 SoundEngine.PlaySound(SoundID.Item144); // Cymbal sound
                 // Upon standing, execute dealer logic
                 blackjackGame.DealerLogic();
@@ -85,16 +89,24 @@ namespace Blackjack.Common.UI
             uiElement.Height.Set(height, 0f);
         }
 
+        private bool buttonsActive = false;
+
         private void ActivateButtons()
         {
+            if (buttonsActive)
+                return;
             BlackjackPanel.Append(hitButton);
             BlackjackPanel.Append(standButton);
+            buttonsActive = true;
         }
 
         private void DeactivateButtons()
         {
+            if (!buttonsActive)
+                return;
             BlackjackPanel.RemoveChild(hitButton);
             BlackjackPanel.RemoveChild(standButton);
+            buttonsActive = false;
         }
 
         private void CloseButtonClicked(UIMouseEvent evt, UIElement listeningElement)
@@ -104,23 +116,27 @@ namespace Blackjack.Common.UI
         }
         private void PlayButtonClicked(UIMouseEvent evt, UIElement listeningElement)
         {
+            if (blackjackGame.IsAnimating)
+                return;
+
             SoundEngine.PlaySound(SoundID.ResearchComplete);
-            
+
             // Start the game. First, shuffle the cards
             blackjackGame.ShuffleCards();
 
             // Then, deal initial cards
             blackjackGame.InitialDeal();
-
-            // Enable Hit and Stand buttons
-            ActivateButtons();
         }
 
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
-            if (!blackjackGame.GetActiveGame())
+            if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating)
+            {
+                ActivateButtons();
+            }
+            else
             {
                 DeactivateButtons();
             }
@@ -160,11 +176,15 @@ namespace Blackjack.Common.UI
             private DealingCard currentDealingCard = null;
             private float dealSpeed = 0.08f; // Adjust for faster/slower animation
 
+            private bool dealerTurn = false;
+
 
             public bool GetActiveGame()
             {
                 return isGameActive;
             }
+
+            public bool IsAnimating => currentDealingCard != null || dealingQueue.Count > 0;
 
             public override void OnInitialize()
             {
@@ -201,6 +221,10 @@ namespace Blackjack.Common.UI
                 // Set game as active
                 isGameActive = true;
 
+                dealingQueue.Clear();
+                currentDealingCard = null;
+                dealerTurn = false;
+
                 // Deal one card to player and one to dealer and repeat
                 playerCards.Clear();
                 dealerCards.Clear();
@@ -218,9 +242,6 @@ namespace Blackjack.Common.UI
                     }
                 }
                 dealerFirstCardRevealed = false;
-
-                // Calculate hand values
-                CalculateHandValues();
             }
 
             public void DealCard()
@@ -233,36 +254,36 @@ namespace Blackjack.Common.UI
                     QueueDealCard(card, true, endPos);
                 }
 
-                // Calculate hand values
-                CalculateHandValues();
-
-                // Check for bust or 21
-                if (playerHandValue > 21)
-                {
-                    Main.NewText("You busted! Dealer wins.");
-                    isGameActive = false;
-                    dealerFirstCardRevealed = true;
-                }
-                else if (playerHandValue == 21)
-                {
-                    DealerLogic();
-                }
+                // Further logic handled when the card finishes animating
             }
 
             public void DealerLogic()
             {
-                // Reveal first card
+                dealerTurn = true;
                 dealerFirstCardRevealed = true;
+                TryQueueDealerCard();
+            }
 
-                // Hit on soft 17
-                while (dealerHandValue < 17 || (dealerHandValue == 17 && dealerCards.Exists(card => card % 13 == 0)))
+            private void TryQueueDealerCard()
+            {
+                if (dealerHandValue < 17 || (dealerHandValue == 17 && dealerCards.Exists(card => card % 13 == 0)))
                 {
                     if (cardIndex < cardList.Count)
-                        dealerCards.Add(cardList[cardIndex++]);
-                    CalculateHandValues();
+                    {
+                        int card = cardList[cardIndex++];
+                        Vector2 endPos = new Vector2(10 + dealerCards.Count * 150, 80);
+                        QueueDealCard(card, false, endPos);
+                    }
                 }
+                else
+                {
+                    DetermineWinner();
+                    dealerTurn = false;
+                }
+            }
 
-                // Determine winner
+            private void DetermineWinner()
+            {
                 if (dealerHandValue > 21 || playerHandValue > dealerHandValue)
                 {
                     Main.NewText("You win!");
@@ -342,11 +363,15 @@ namespace Blackjack.Common.UI
 
             private void QueueDealCard(int cardIndex, bool toPlayer, Vector2 endPos)
             {
+                CalculatedStyle dims = GetDimensions();
+                Vector2 start = new Vector2(dims.X + 800, dims.Y + 250);
+                Vector2 finalPos = new Vector2(dims.X + endPos.X, dims.Y + endPos.Y);
+
                 dealingQueue.Enqueue(new DealingCard
                 {
                     CardIndex = cardIndex,
-                    StartPos = new Vector2(GetDimensions().X + 800, GetDimensions().Y + 250),
-                    EndPos = endPos,
+                    StartPos = start,
+                    EndPos = finalPos,
                     Progress = 0f,
                     ToPlayer = toPlayer
                 });
@@ -471,7 +496,26 @@ namespace Blackjack.Common.UI
                             dealerCards.Add(currentDealingCard.CardIndex);
 
                         CalculateHandValues();
+                        DealingCard finished = currentDealingCard;
                         currentDealingCard = null;
+
+                        if (finished.ToPlayer)
+                        {
+                            if (playerHandValue > 21)
+                            {
+                                Main.NewText("You busted! Dealer wins.");
+                                isGameActive = false;
+                                dealerFirstCardRevealed = true;
+                            }
+                            else if (playerHandValue == 21)
+                            {
+                                DealerLogic();
+                            }
+                        }
+                        else if (dealerTurn)
+                        {
+                            TryQueueDealerCard();
+                        }
                     }
                 }
             }
