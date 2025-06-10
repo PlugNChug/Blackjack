@@ -23,8 +23,6 @@ namespace Blackjack.Common.UI
         private UIHoverImageButton hitButton;
         private UIHoverImageButton standButton;
 
-        private bool buttonsActive = false;
-
         public override void OnInitialize()
         {
             BlackjackPanel = new DraggableUIPanel();
@@ -90,6 +88,8 @@ namespace Blackjack.Common.UI
             uiElement.Width.Set(width, 0f);
             uiElement.Height.Set(height, 0f);
         }
+
+        private bool buttonsActive = false;
 
         private void ActivateButtons()
         {
@@ -174,16 +174,10 @@ namespace Blackjack.Common.UI
             // Active game boolean
             private bool isGameActive = false;
 
-            // Animation fields for card
+            // Animation fields
             private Queue<DealingCard> dealingQueue = new Queue<DealingCard>();
             private DealingCard currentDealingCard = null;
             private float dealSpeed = 0.08f; // Adjust for faster/slower animation
-
-            // Animation fields for dealer's hidden card
-            private bool dealerCardFlipping = false;
-            private float dealerCardFlipProgress = 0f;
-            private bool dealerCardFlipRevealed = false;
-            private const float dealerCardFlipSpeed = 0.15f;
 
             private bool dealerTurn = false;
             private int dealerDrawDelayTimer = 0;
@@ -252,11 +246,6 @@ namespace Blackjack.Common.UI
                         QueueDealCard(dealerCard, false, dealerEndPos);
                     }
                 }
-
-                // Reset dealer card flip animation
-                dealerCardFlipping = false;
-                dealerCardFlipProgress = 0f;
-                dealerCardFlipRevealed = false;
                 dealerFirstCardRevealed = false;
             }
 
@@ -413,15 +402,6 @@ namespace Blackjack.Common.UI
                 });
             }
 
-            private void RevealDealerCardWithFlip()
-            {
-                if (!dealerCardFlipping && !dealerCardFlipRevealed)
-                {
-                    dealerCardFlipping = true;
-                    dealerCardFlipProgress = 0f;
-                }
-            }
-
             protected override void DrawSelf(SpriteBatch spriteBatch)
             {
                 base.DrawSelf(spriteBatch);
@@ -471,12 +451,13 @@ namespace Blackjack.Common.UI
                     Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 400, 90, 128);
 
                     spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
-                    
+
                 }
 
                 // Render dealer cards
                 for (int i = 0; i < dealerCards.Count; i++)
                 {
+                    // Get card texture
                     int cardIndex = dealerCards[i];
                     Asset<Texture2D> cardBackAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_back");
                     Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{cardIndex}");
@@ -511,7 +492,6 @@ namespace Blackjack.Common.UI
                     }
                     else
                     {
-                        // Normal draw
                         cardTexture = cardFrontAsset.Value;
                         cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 80, 90, 128);
                     }
@@ -528,9 +508,9 @@ namespace Blackjack.Common.UI
                         currentDealingCard.EndPos,
                         currentDealingCard.Progress
                     );
-                    Asset<Texture2D> cardAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_back");
+                    Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{currentDealingCard.CardIndex}");
                     Rectangle cardRectangle = new Rectangle((int)pos.X, (int)pos.Y, 90, 128);
-                    spriteBatch.Draw(cardAsset.Value, cardRectangle, Color.White);
+                    spriteBatch.Draw(cardFrontAsset.Value, cardRectangle, Color.White);
                 }
 
                 // Draw the card stack
@@ -592,17 +572,6 @@ namespace Blackjack.Common.UI
                         else if (dealerTurn)
                         {
                             TryQueueDealerCard();
-                        }
-
-                        if (dealerCardFlipping)
-                        {
-                            dealerCardFlipProgress += dealerCardFlipSpeed;
-                            if (dealerCardFlipProgress >= 1f)
-                            {
-                                dealerCardFlipping = false;
-                                dealerCardFlipRevealed = true;
-                                dealerFirstCardRevealed = true;
-                            }
                         }
                     }
                 }
