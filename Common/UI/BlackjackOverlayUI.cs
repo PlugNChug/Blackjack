@@ -218,6 +218,10 @@ namespace Blackjack.Common.UI
             private int dealerDrawDelayTimer = 0;
             private const int DealerDrawDelay = 30; // frames of delay between dealer draws
 
+            // Game status text
+            DynamicSpriteFont fontBig = FontAssets.DeathText.Value;
+            string gameStatus = "";
+
 
             public bool GetActiveGame() => isGameActive;
 
@@ -258,6 +262,10 @@ namespace Blackjack.Common.UI
                 // Set game as active
                 isGameActive = true;
 
+                // Clear game status text
+                gameStatus = "";
+
+                // Reset dealing queue
                 dealingQueue.Clear();
                 currentDealingCard = null;
                 dealerTurn = false;
@@ -332,15 +340,15 @@ namespace Blackjack.Common.UI
                 StartDealerFlip();
                 if (dealerHandValue > 21 || playerHandValue > dealerHandValue)
                 {
-                    Main.NewText("You win!");
+                    gameStatus = "You win!";
                 }
                 else if (playerHandValue < dealerHandValue)
                 {
-                    Main.NewText("Dealer wins.");
+                    gameStatus = "You lose...";
                 }
                 else
                 {
-                    Main.NewText("Push! It's a tie.");
+                    gameStatus = "Push! It's a tie.";
                 }
                 isGameActive = false;
             }
@@ -364,21 +372,22 @@ namespace Blackjack.Common.UI
                 // Check for automatic push due to both the player and dealer having 21 with two cards
                 if (playerCards.Count == 2 && dealerCards.Count == 2 && playerHandValue == 21 && dealerHandValue == 21)
                 {
-                    Main.NewText("Push! Both you and the dealer have Blackjack.");
+                    gameStatus = "Push. Player and Dealer tied Blackjack.";
                     isGameActive = false;
                     StartDealerFlip();
                 }
                 // Then, check for player natural
                 else if (playerCards.Count == 2 && playerHandValue == 21)
                 {
-                    Main.NewText("Blackjack!");
+                    gameStatus = "Blackjack! You win!";
+                    SoundEngine.PlaySound(SoundID.Meowmere);
                     playerMoney += (int)(playerMoney * 1.5);
                     isGameActive = false;
                     StartDealerFlip();
                 }
                 else if (dealerCards.Count == 2 && dealerHandValue == 21)
                 {
-                    Main.NewText("Dealer has Blackjack! You lose.");
+                    gameStatus = "Dealer Blackjack. You lose...";
                     playerMoney -= playerMoney;
                     isGameActive = false;
                     StartDealerFlip();
@@ -443,11 +452,11 @@ namespace Blackjack.Common.UI
                 CalculatedStyle dimensions = GetDimensions();
                 Vector2 position = new Vector2(dimensions.X, dimensions.Y);
 
-                // Render player info
+                // Bet amount info
                 string playerText = "Current bet: " + playerMoney;
                 spriteBatch.DrawString(font, playerText, position + new Vector2(10, 600), Color.White);
 
-                // Dealer status messages
+                // Dealer hand value text. Should be rendered above the dealer's cards
                 string dealerStatus1 = "Dealer's hand: ";
                 string dealerStatus2;
                 if (isGameActive && !dealerFirstCardRevealed && dealerCards.Count > 1)
@@ -463,7 +472,7 @@ namespace Blackjack.Common.UI
                     dealerStatus2 = dealerHandValue.ToString();
                 }
 
-                // Player status messages
+                // Player hand value text. Should be rendered above the player's cards
                 string playerStatus1 = "Your hand: ";
                 string playerStatus2 = playerHandValue.ToString();
 
@@ -540,7 +549,7 @@ namespace Blackjack.Common.UI
                         currentDealingCard.EndPos,
                         currentDealingCard.Progress
                     );
-                    Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{currentDealingCard.CardIndex}");
+                    Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_back");
                     Rectangle cardRectangle = new Rectangle((int)pos.X, (int)pos.Y, 90, 128);
                     spriteBatch.Draw(cardFrontAsset.Value, cardRectangle, Color.White);
                 }
@@ -549,6 +558,9 @@ namespace Blackjack.Common.UI
                 Asset<Texture2D> cardStackAsset = ModContent.Request<Texture2D>("Blackjack/Assets/Cards/card_stack");
                 Rectangle stackRectangle = new Rectangle((int)position.X + 800, (int)position.Y + 250, 90, 135);
                 spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
+
+                // Render game status text
+                spriteBatch.DrawString(fontBig, gameStatus, new Vector2(position.X + dimensions.Width / 2, position.Y + dimensions.Height / 2), Color.Blue);
 
             }
 
@@ -591,7 +603,7 @@ namespace Blackjack.Common.UI
                         {
                             if (playerHandValue > 21)
                             {
-                                Main.NewText("You busted! Dealer wins.");
+                                gameStatus = "Bust. You lose...";
                                 isGameActive = false;
                                 StartDealerFlip();
                             }
