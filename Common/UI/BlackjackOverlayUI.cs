@@ -163,6 +163,9 @@ namespace Blackjack.Common.UI
             private List<int> playerCards = new List<int>();
             private List<int> dealerCards = new List<int>();
             private bool dealerFirstCardRevealed = false;
+            private bool flippingDealerCard = false;
+            private float dealerCardFlipProgress = 0f;
+            private const float dealerCardFlipSpeed = 0.15f;
 
             // Hand values for calculations
             private int playerHandValue = 0;
@@ -183,6 +186,8 @@ namespace Blackjack.Common.UI
             private const float dealerCardFlipSpeed = 0.15f;
 
             private bool dealerTurn = false;
+            private int dealerDrawDelayTimer = 0;
+            private const int DealerDrawDelay = 30; // frames of delay between dealer draws
 
 
             public bool GetActiveGame()
@@ -271,12 +276,19 @@ namespace Blackjack.Common.UI
             public void DealerLogic()
             {
                 dealerTurn = true;
-                RevealDealerCardWithFlip();
+                dealerDrawDelayTimer = DealerDrawDelay;
+                StartDealerFlip();
                 TryQueueDealerCard();
             }
 
             private void TryQueueDealerCard()
             {
+                if (dealerDrawDelayTimer > 0)
+                {
+                    dealerDrawDelayTimer--;
+                    return;
+                }
+
                 if (dealerHandValue < 17 || (dealerHandValue == 17 && dealerCards.Exists(card => card % 13 == 0)))
                 {
                     if (cardIndex < cardList.Count)
@@ -284,6 +296,7 @@ namespace Blackjack.Common.UI
                         int card = cardList[cardIndex++];
                         Vector2 endPos = new Vector2(10 + dealerCards.Count * 150, 80);
                         QueueDealCard(card, false, endPos);
+                        dealerDrawDelayTimer = DealerDrawDelay;
                     }
                 }
                 else
@@ -295,6 +308,7 @@ namespace Blackjack.Common.UI
 
             private void DetermineWinner()
             {
+                StartDealerFlip();
                 if (dealerHandValue > 21 || playerHandValue > dealerHandValue)
                 {
                     Main.NewText("You win!");
@@ -310,17 +324,28 @@ namespace Blackjack.Common.UI
                 isGameActive = false;
             }
 
+            private void StartDealerFlip()
+            {
+                if (flippingDealerCard || dealerFirstCardRevealed)
+                    return;
+                flippingDealerCard = true;
+                dealerCardFlipProgress = 0f;
+            }
+
             private void CalculateHandValues()
             {
                 playerHandValue = CalculateValue(playerCards);
                 dealerHandValue = CalculateValue(dealerCards);
+
+                if (!isGameActive)
+                    return;
 
                 // Check for automatic push due to both the player and dealer having 21 with two cards
                 if (playerCards.Count == 2 && dealerCards.Count == 2 && playerHandValue == 21 && dealerHandValue == 21)
                 {
                     Main.NewText("Push! Both you and the dealer have Blackjack.");
                     isGameActive = false;
-                    RevealDealerCardWithFlip();
+                    StartDealerFlip();
                 }
                 // Then, check for player natural
                 else if (playerCards.Count == 2 && playerHandValue == 21)
@@ -328,14 +353,14 @@ namespace Blackjack.Common.UI
                     Main.NewText("Blackjack!");
                     playerMoney += (int)(playerMoney * 1.5);
                     isGameActive = false;
-                    RevealDealerCardWithFlip();
+                    StartDealerFlip();
                 }
                 else if (dealerCards.Count == 2 && dealerHandValue == 21)
                 {
                     Main.NewText("Dealer has Blackjack! You lose.");
                     playerMoney -= playerMoney;
                     isGameActive = false;
-                    RevealDealerCardWithFlip();
+                    StartDealerFlip();
                 }
             }
 
@@ -456,54 +481,42 @@ namespace Blackjack.Common.UI
                     Asset<Texture2D> cardBackAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_back");
                     Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{cardIndex}");
                     Texture2D cardTexture;
-                    Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 80, 90, 128);
+                    Rectangle cardRectangle;
 
-                    if (i == 0 && (!dealerFirstCardRevealed || dealerCardFlipping))
+                    if (i == 0 && (!dealerFirstCardRevealed || flippingDealerCard))
                     {
-                        // Flip animation
-                        float scale = 1f;
-                        bool showFront = false;
-                        if (dealerCardFlipping)
+                        float scale;
+                        if (flippingDealerCard)
                         {
-                            float progress = dealerCardFlipProgress;
-                            if (progress < 0.5f)
+                            if (dealerCardFlipProgress < 0.5f)
                             {
-                                scale = MathHelper.Lerp(1f, 0f, progress * 2f);
-                                showFront = false;
+                                cardTexture = cardBackAsset.Value;
+                                scale = 1f - dealerCardFlipProgress * 2f;
                             }
                             else
                             {
-                                scale = MathHelper.Lerp(0f, 1f, (progress - 0.5f) * 2f);
-                                showFront = true;
+                                cardTexture = cardFrontAsset.Value;
+                                scale = (dealerCardFlipProgress - 0.5f) * 2f;
                             }
                         }
                         else
                         {
+                            cardTexture = cardBackAsset.Value;
                             scale = 1f;
-                            showFront = false;
                         }
 
-                        cardTexture = showFront || dealerCardFlipRevealed ? cardFrontAsset.Value : cardBackAsset.Value;
-
-                        Vector2 cardCenter = new Vector2(cardRectangle.X + cardRectangle.Width / 2, cardRectangle.Y + cardRectangle.Height / 2);
-                        spriteBatch.Draw(
-                            cardTexture,
-                            cardCenter,
-                            null,
-                            Color.White,
-                            0f,
-                            new Vector2(cardTexture.Width / 2, cardTexture.Height / 2),
-                            new Vector2(scale * cardRectangle.Width / cardTexture.Width, cardRectangle.Height / (float)cardTexture.Height),
-                            SpriteEffects.None,
-                            0f
-                        );
+                        int width = (int)(90 * MathHelper.Clamp(scale, 0f, 1f));
+                        int x = (int)position.X + 10 + i * 150 + (90 - width) / 2;
+                        cardRectangle = new Rectangle(x, (int)position.Y + 80, width, 128);
                     }
                     else
                     {
                         // Normal draw
                         cardTexture = cardFrontAsset.Value;
-                        spriteBatch.Draw(cardTexture, cardRectangle, Color.White);
+                        cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 80, 90, 128);
                     }
+
+                    spriteBatch.Draw(cardTexture, cardRectangle, Color.White);
                 }
 
 
@@ -531,6 +544,17 @@ namespace Blackjack.Common.UI
             {
                 base.Update(gameTime);
 
+                if (flippingDealerCard)
+                {
+                    dealerCardFlipProgress += dealerCardFlipSpeed;
+                    if (dealerCardFlipProgress >= 1f)
+                    {
+                        dealerCardFlipProgress = 1f;
+                        flippingDealerCard = false;
+                        dealerFirstCardRevealed = true;
+                    }
+                }
+
                 if (currentDealingCard == null && dealingQueue.Count > 0)
                 {
                     currentDealingCard = dealingQueue.Dequeue();
@@ -557,11 +581,12 @@ namespace Blackjack.Common.UI
                             {
                                 Main.NewText("You busted! Dealer wins.");
                                 isGameActive = false;
-                                RevealDealerCardWithFlip();
+                                StartDealerFlip();
                             }
                             else if (playerHandValue == 21)
                             {
-                                DealerLogic();
+                                if (isGameActive)
+                                    DealerLogic();
                             }
                         }
                         else if (dealerTurn)
@@ -580,6 +605,11 @@ namespace Blackjack.Common.UI
                             }
                         }
                     }
+                }
+
+                if (dealerTurn && currentDealingCard == null && dealingQueue.Count == 0)
+                {
+                    TryQueueDealerCard();
                 }
             }
 
