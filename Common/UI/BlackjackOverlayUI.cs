@@ -238,8 +238,8 @@ namespace Blackjack.Common.UI
             // Returns true if a game is currently in progress
             public bool GetActiveGame() => isGameActive;
 
-            // True while a card animation is occurring
-            public bool IsAnimating => currentDealingCard != null || dealingQueue.Count > 0;
+            // True while a card animation or dealer flip animation is occurring
+            public bool IsAnimating => currentDealingCard != null || dealingQueue.Count > 0 || flippingDealerCard;
 
             public override void OnInitialize()
             {
@@ -282,6 +282,8 @@ namespace Blackjack.Common.UI
                 dealingQueue.Clear();
                 currentDealingCard = null;
                 dealerTurn = false;
+                flippingDealerCard = false;
+                dealerCardFlipProgress = 0f;
 
                 // Deal one card to player and one to dealer and repeat
                 playerCards.Clear();
