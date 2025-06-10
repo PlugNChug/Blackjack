@@ -54,7 +54,7 @@ namespace Blackjack.Common.UI
             // Hit button
             Asset<Texture2D> buttonHitTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonHit");
             hitButton = new UIHoverImageButton(buttonHitTexture, "Hit");
-            SetRectangle(hitButton, left: boxWidth / 2 - 44f, top: boxHeight - 96f, width: 88f, height: 88f);
+            SetRectangle(hitButton, left: boxWidth / 2 - 96f, top: boxHeight - 96f, width: 88f, height: 88f);
             hitButton.OnLeftClick += (evt, element) =>
             {
                 if (blackjackGame.IsAnimating)
@@ -66,7 +66,7 @@ namespace Blackjack.Common.UI
             // Stand button
             Asset<Texture2D> buttonStandTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonStand");
             standButton = new UIHoverImageButton(buttonStandTexture, "Stand");
-            SetRectangle(standButton, left: boxWidth / 2 + 62f, top: boxHeight - 96f, width: 88f, height: 88f);
+            SetRectangle(standButton, left: boxWidth / 2 + 8f, top: boxHeight - 96f, width: 88f, height: 88f);
             standButton.OnLeftClick += (evt, element) =>
             {
                 if (blackjackGame.IsAnimating)
@@ -81,6 +81,14 @@ namespace Blackjack.Common.UI
             Append(BlackjackPanel);
         }
 
+        /// <summary>
+        /// Create a rectangle out of the parameters
+        /// </summary>
+        /// <param name="uiElement"></param>
+        /// <param name="left"></param>
+        /// <param name="top"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         private void SetRectangle(UIElement uiElement, float left, float top, float width, float height)
         {
             uiElement.Left.Set(left, 0f);
@@ -91,6 +99,9 @@ namespace Blackjack.Common.UI
 
         private bool buttonsActive = false;
 
+        /// <summary>
+        /// Activates the hit/stand buttons
+        /// </summary>
         private void ActivateButtons()
         {
             if (buttonsActive)
@@ -100,6 +111,9 @@ namespace Blackjack.Common.UI
             buttonsActive = true;
         }
 
+        /// <summary>
+        /// Deactivates the hit/stand buttons
+        /// </summary>
         private void DeactivateButtons()
         {
             if (!buttonsActive)
@@ -109,11 +123,22 @@ namespace Blackjack.Common.UI
             buttonsActive = false;
         }
 
+        /// <summary>
+        /// Actions to take when the close button is clicked
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="listeningElement"></param>
         private void CloseButtonClicked(UIMouseEvent evt, UIElement listeningElement)
         {
             SoundEngine.PlaySound(SoundID.MenuClose);
             ModContent.GetInstance<BlackjackOverlayUISystem>().HideUI();
         }
+
+        /// <summary>
+        /// Actions to take when the play button is clicked
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="listeningElement"></param>
         private void PlayButtonClicked(UIMouseEvent evt, UIElement listeningElement)
         {
             if (blackjackGame.IsAnimating)
@@ -128,6 +153,10 @@ namespace Blackjack.Common.UI
             blackjackGame.InitialDeal();
         }
 
+        /// <summary>
+        /// Override that allows the UI window to visually update properly when dragged around. Also updates the hit/stand button states
+        /// </summary>
+        /// <param name="gameTime"></param>
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
@@ -142,6 +171,9 @@ namespace Blackjack.Common.UI
             }
         }
 
+        /// <summary>
+        /// Card dealing animation helper
+        /// </summary>
         public class DealingCard
         {
             public int CardIndex;
@@ -151,6 +183,9 @@ namespace Blackjack.Common.UI
             public bool ToPlayer; // true = player, false = dealer
         }
 
+        /// <summary>
+        /// The actual blackjack session as a UIElement.
+        /// </summary>
         public class BlackjackGame : UIElement
         {
             private int playerMoney;
@@ -184,10 +219,7 @@ namespace Blackjack.Common.UI
             private const int DealerDrawDelay = 30; // frames of delay between dealer draws
 
 
-            public bool GetActiveGame()
-            {
-                return isGameActive;
-            }
+            public bool GetActiveGame() => isGameActive;
 
             public bool IsAnimating => currentDealingCard != null || dealingQueue.Count > 0;
 
