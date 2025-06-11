@@ -29,19 +29,14 @@ namespace Blackjack.Common.UI
             if (ContainsPoint(Main.MouseScreen))
             {
                 Main.LocalPlayer.mouseInterface = true;
-                ItemSlot.Handle(ref item, context);
-                if (!item.IsAir && item.value <= 0)
-                {
-                    item.TurnToAir();
-                }
             }
         }
 
-        // Draw is performed manually by the owning UIElement
-        public void DrawSlot(SpriteBatch spriteBatch)
+        // Draw the slot with built-in ItemSlot logic
+        protected override void DrawSelf(SpriteBatch spriteBatch)
         {
+            base.DrawSelf(spriteBatch);
             CalculatedStyle dims = GetDimensions();
-            // Older tModLoader versions only support the overload without a scale parameter
             ItemSlot.Draw(spriteBatch, ref item, context, dims.Position());
         }
     }

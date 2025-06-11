@@ -527,7 +527,6 @@ namespace Blackjack.Common.UI
                 // Bet amount info
                 string playerText = "Current bet: " + playerMoney;
                 spriteBatch.DrawString(font, playerText, position + new Vector2(10, 600), Color.White);
-                betSlot?.DrawSlot(spriteBatch);
 
                 // Dealer hand value text. Should be rendered above the dealer's cards
                 string dealerStatus1 = "Dealer's hand: ";
