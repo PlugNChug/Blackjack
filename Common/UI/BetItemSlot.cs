@@ -41,7 +41,8 @@ namespace Blackjack.Common.UI
         public void DrawSlot(SpriteBatch spriteBatch)
         {
             CalculatedStyle dims = GetDimensions();
-            ItemSlot.Draw(spriteBatch, ref item, context, dims.Position(), default, scale);
+            // Older tModLoader versions only support the overload without a scale parameter
+            ItemSlot.Draw(spriteBatch, ref item, context, dims.Position());
         }
     }
 }

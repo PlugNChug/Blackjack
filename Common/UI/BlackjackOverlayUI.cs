@@ -218,6 +218,12 @@ namespace Blackjack.Common.UI
             internal Item BetItem;
             private BetItemSlot betSlot;
 
+            public BlackjackGame()
+            {
+                BetItem = new Item();
+                BetItem.TurnToAir();
+            }
+
             // Holds a numeric representation of a standard 52 card deck
             private List<int> cardList;
             // Tracks which card to draw next from the shuffled deck
@@ -266,8 +272,6 @@ namespace Blackjack.Common.UI
             {
                 base.OnInitialize();
                 playerMoney = 1000; // Starting money
-                BetItem = new Item();
-                BetItem.TurnToAir();
 
                 // Initialize a standard deck of 52 cards
                 cardList = new List<int>();
