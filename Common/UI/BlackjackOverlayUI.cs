@@ -21,6 +21,7 @@ namespace Blackjack.Common.UI
     {
         public DraggableUIPanel BlackjackPanel;
         private BlackjackGame blackjackGame;
+        private BetItemSlot betItemSlot;
 
         private UIHoverImageButton playButton;
         private UIHoverImageButton hitButton;
@@ -46,6 +47,11 @@ namespace Blackjack.Common.UI
             blackjackGame = new BlackjackGame();
             SetRectangle(blackjackGame, 20f, 50f, 200f, 30f);
             BlackjackPanel.Append(blackjackGame);
+
+            betItemSlot = new BetItemSlot(blackjackGame.BetItem);
+            SetRectangle(betItemSlot, left: 20f, top: boxHeight - 150f, width: 52f, height: 52f);
+            blackjackGame.SetBetItemSlot(betItemSlot);
+            BlackjackPanel.Append(betItemSlot);
 
             // Play button
             Asset<Texture2D> buttonPlayTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonPlay");
@@ -135,6 +141,7 @@ namespace Blackjack.Common.UI
         private void CloseButtonClicked(UIMouseEvent evt, UIElement listeningElement)
         {
             SoundEngine.PlaySound(SoundID.MenuClose);
+            blackjackGame.WithdrawBetItem(Main.LocalPlayer);
             ModContent.GetInstance<BlackjackOverlayUISystem>().HideUI();
         }
 
@@ -175,6 +182,12 @@ namespace Blackjack.Common.UI
             }
         }
 
+        public override void OnDeactivate()
+        {
+            blackjackGame.WithdrawBetItem(Main.LocalPlayer);
+            base.OnDeactivate();
+        }
+
         /// <summary>
         /// Card dealing animation helper
         /// </summary>
@@ -200,6 +213,10 @@ namespace Blackjack.Common.UI
         {
             // Amount of money the player has for betting
             private int playerMoney;
+
+            // Item placed into the betting slot
+            internal Item BetItem;
+            private BetItemSlot betSlot;
 
             // Holds a numeric representation of a standard 52 card deck
             private List<int> cardList;
@@ -249,12 +266,28 @@ namespace Blackjack.Common.UI
             {
                 base.OnInitialize();
                 playerMoney = 1000; // Starting money
+                BetItem = new Item();
+                BetItem.TurnToAir();
 
                 // Initialize a standard deck of 52 cards
                 cardList = new List<int>();
                 for (int i = 0; i < 52; i++)
                 {
                     cardList.Add(i);
+                }
+            }
+
+            public void SetBetItemSlot(BetItemSlot slot)
+            {
+                betSlot = slot;
+            }
+
+            public void WithdrawBetItem(Player player)
+            {
+                if (BetItem != null && !BetItem.IsAir)
+                {
+                    player.QuickSpawnItem(player.GetSource_Misc("Blackjack"), BetItem.type, BetItem.stack);
+                    BetItem.TurnToAir();
                 }
             }
 
@@ -364,19 +397,23 @@ namespace Blackjack.Common.UI
             {
                 // Compare hand values and announce the result
                 StartDealerFlip();
+                int betValue = BetItem?.value ?? 0;
                 if (dealerHandValue > 21 || playerHandValue > dealerHandValue)
                 {
                     gameStatus = "You win!";
+                    playerMoney += betValue;
                 }
                 else if (playerHandValue < dealerHandValue)
                 {
                     gameStatus = "You lose...";
+                    playerMoney -= betValue;
                 }
                 else
                 {
                     gameStatus = "Push! It's a tie.";
                 }
                 isGameActive = false;
+                WithdrawBetItem(Main.LocalPlayer);
             }
 
             private void StartDealerFlip()
@@ -409,16 +446,18 @@ namespace Blackjack.Common.UI
                 {
                     gameStatus = "Blackjack! You win!";
                     SoundEngine.PlaySound(SoundID.Meowmere);
-                    playerMoney += (int)(playerMoney * 1.5);
+                    playerMoney += (int)((BetItem?.value ?? 0) * 1.5f);
                     isGameActive = false;
                     StartDealerFlip();
+                    WithdrawBetItem(Main.LocalPlayer);
                 }
                 else if (dealerCards.Count == 2 && dealerHandValue == 21)
                 {
                     gameStatus = "Dealer Blackjack. You lose...";
-                    playerMoney -= playerMoney;
+                    playerMoney -= BetItem?.value ?? 0;
                     isGameActive = false;
                     StartDealerFlip();
+                    WithdrawBetItem(Main.LocalPlayer);
                 }
             }
 
@@ -484,6 +523,7 @@ namespace Blackjack.Common.UI
                 // Bet amount info
                 string playerText = "Current bet: " + playerMoney;
                 spriteBatch.DrawString(font, playerText, position + new Vector2(10, 600), Color.White);
+                betSlot?.DrawSlot(spriteBatch);
 
                 // Dealer hand value text. Should be rendered above the dealer's cards
                 string dealerStatus1 = "Dealer's hand: ";
@@ -635,6 +675,8 @@ namespace Blackjack.Common.UI
                                 gameStatus = "Bust. You lose...";
                                 isGameActive = false;
                                 StartDealerFlip();
+                                playerMoney -= BetItem?.value ?? 0;
+                                WithdrawBetItem(Main.LocalPlayer);
                             }
                             else if (playerHandValue == 21)
                             {
