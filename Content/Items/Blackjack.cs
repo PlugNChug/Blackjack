@@ -31,7 +31,10 @@ namespace Blackjack.Content.Items
         // When the item is used, display the blackjack interface
         public override void UseAnimation(Player player)
         {
-            ModContent.GetInstance<BlackjackOverlayUISystem>().ShowUI();
+			if (player.whoAmI == Main.myPlayer)
+			{
+                ModContent.GetInstance<BlackjackOverlayUISystem>().ShowUI();
+            }
         }
 
         // Basic melee effect: set enemies on fire when struck

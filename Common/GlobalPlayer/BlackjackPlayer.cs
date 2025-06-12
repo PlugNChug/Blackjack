@@ -1,6 +1,6 @@
 ﻿using Terraria.ModLoader;
 
-namespace Blackjack.Common.Player
+namespace Blackjack.Common.GlobalPlayer
 {
     internal class BlackjackPlayer : ModPlayer
     {
