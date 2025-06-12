@@ -401,11 +401,11 @@ namespace Blackjack.Common.UI
                     if (cardIndex < cardList.Count)
                     {
                         int playerCard = cardList[cardIndex++];
-                        Vector2 playerEndPos = new Vector2(10 + i * 150, 400);
+                        Vector2 playerEndPos = GetCardEndPos(true, playerCards.Count);
                         QueueDealCard(playerCard, true, playerEndPos);
 
                         int dealerCard = cardList[cardIndex++];
-                        Vector2 dealerEndPos = new Vector2(10 + i * 150, 80);
+                        Vector2 dealerEndPos = GetCardEndPos(false, dealerCards.Count);
                         QueueDealCard(dealerCard, false, dealerEndPos);
                     }
                 }
@@ -418,7 +418,7 @@ namespace Blackjack.Common.UI
                 if (cardIndex < cardList.Count)
                 {
                     int card = cardList[cardIndex++];
-                    Vector2 endPos = new Vector2(10 + playerCards.Count * 150, 400); // Match your draw positions
+                    Vector2 endPos = GetCardEndPos(true, playerCards.Count);
                     QueueDealCard(card, true, endPos);
                 }
 
@@ -448,7 +448,7 @@ namespace Blackjack.Common.UI
                     if (cardIndex < cardList.Count)
                     {
                         int card = cardList[cardIndex++];
-                        Vector2 endPos = new Vector2(10 + dealerCards.Count * 150, 80);
+                        Vector2 endPos = GetCardEndPos(false, dealerCards.Count);
                         QueueDealCard(card, false, endPos);
                         dealerDrawDelayTimer = DealerDrawDelay;
                     }
@@ -562,11 +562,24 @@ namespace Blackjack.Common.UI
                 return value;
             }
 
+            // Calculates the destination position for a card in a centered hand
+            private Vector2 GetCardEndPos(bool toPlayer, int cardIndexInHand)
+            {
+                CalculatedStyle dims = GetDimensions();
+                float centerX = dims.X + dims.Width / 2f;
+                int cardWidth = 90;
+                int totalCards = (toPlayer ? playerCards.Count : dealerCards.Count) + 1;
+                float average = (1 + totalCards) / 2f;
+                float x = centerX - ((cardIndexInHand + 1 - average) * 150) - (cardWidth / 2f);
+                float y = dims.Y + (toPlayer ? 400 : 80);
+                return new Vector2(x, y);
+            }
+
             private void QueueDealCard(int cardIndex, bool toPlayer, Vector2 endPos)
             {
                 CalculatedStyle dims = GetDimensions();
-                Vector2 start = new Vector2(dims.X + 800, dims.Y + 250);
-                Vector2 finalPos = new Vector2(dims.X + endPos.X, dims.Y + endPos.Y);
+                Vector2 start = new Vector2(dims.X + dims.Width - 100, dims.Y + 250);
+                Vector2 finalPos = endPos;
 
                 dealingQueue.Enqueue(new DealingCard
                 {
@@ -651,6 +664,9 @@ namespace Blackjack.Common.UI
                     Texture2D cardTexture;
                     Rectangle cardRectangle;
 
+                    float dealerAverage = (1 + dealerCards.Count) / 2f;
+                    int baseX = centerX - (int)((i + 1 - dealerAverage) * 150) - (cardWidth / 2);
+
                     if (i == 0 && (!dealerFirstCardRevealed || flippingDealerCard))
                     {
                         float scale;
@@ -674,13 +690,13 @@ namespace Blackjack.Common.UI
                         }
 
                         int width = (int)(90 * MathHelper.Clamp(scale, 0f, 1f));
-                        int x = (int)position.X + 10 + i * 150 + (90 - width) / 2;
+                        int x = baseX + (90 - width) / 2;
                         cardRectangle = new Rectangle(x, (int)position.Y + 80, width, 128);
                     }
                     else
                     {
                         cardTexture = cardFrontAsset.Value;
-                        cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 80, 90, 128);
+                        cardRectangle = new Rectangle(baseX, (int)position.Y + 80, cardWidth, 128);
                     }
 
                     spriteBatch.Draw(cardTexture, cardRectangle, Color.White);
