@@ -27,6 +27,8 @@ namespace Blackjack.Common.UI
         private UIHoverImageButton hitButton;
         private UIHoverImageButton standButton;
 
+        private bool standButtonActive = false;
+
         public override void OnInitialize()
         {
             BlackjackPanel = new DraggableUIPanel();
@@ -83,6 +85,7 @@ namespace Blackjack.Common.UI
             {
                 if (blackjackGame.IsAnimating)
                     return;
+                standButtonActive = true;
                 SoundEngine.PlaySound(SoundID.Item144); // Cymbal sound
                 // Upon standing, execute dealer logic
                 blackjackGame.DealerLogic();
@@ -136,6 +139,23 @@ namespace Blackjack.Common.UI
             buttonsActive = false;
         }
 
+        private bool playButtonActive = true;
+
+        private void ActivatePlayButton()
+        {
+            if (playButtonActive)
+                return;
+            BlackjackPanel.Append(playButton);
+            playButtonActive = true;
+        }
+        private void DeactivatePlayButton()
+        {
+            if (!playButtonActive)
+                return;
+            BlackjackPanel.RemoveChild(playButton);
+            playButtonActive = false;
+        }
+
         /// <summary>
         /// Actions to take when the close button is clicked
         /// </summary>
@@ -157,6 +177,7 @@ namespace Blackjack.Common.UI
         {
             if (blackjackGame.IsAnimating)
                 return;
+            standButtonActive = false;
 
             SoundEngine.PlaySound(SoundID.ResearchComplete);
 
@@ -165,6 +186,9 @@ namespace Blackjack.Common.UI
 
             // Then, deal initial cards
             blackjackGame.InitialDeal();
+
+            // Finally, deactivate the play button
+            DeactivatePlayButton();
         }
 
         /// <summary>
@@ -175,13 +199,18 @@ namespace Blackjack.Common.UI
         {
             base.Update(gameTime);
 
-            if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating)
+            if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating && !standButtonActive)
             {
                 ActivateButtons();
             }
             else
             {
                 DeactivateButtons();
+            }
+
+            if (!blackjackGame.GetActiveGame())
+            {
+                ActivatePlayButton();
             }
         }
 
