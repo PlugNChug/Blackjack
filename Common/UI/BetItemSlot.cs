@@ -1,8 +1,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Linq;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
+using Terraria.ID;
 using Terraria.UI;
 
 namespace Blackjack.Common.UI
@@ -14,13 +16,13 @@ namespace Blackjack.Common.UI
         private readonly int context;
         private readonly float scale;
 
-        public BetItemSlot(Item boundItem, int context = ItemSlot.Context.BankItem, float scale = 1f)
+        public BetItemSlot(Item boundItem, int context = ItemSlot.Context.BankItem, float size = 52f)
         {
             item = boundItem;
             this.context = context;
-            this.scale = scale;
-            Width.Set(52f * scale, 0f);
-            Height.Set(52f * scale, 0f);
+            scale = 1f;
+            Width.Set(size * scale, 0f);
+            Height.Set(size * scale, 0f);
         }
 
         public override void Update(GameTime gameTime)
@@ -30,6 +32,29 @@ namespace Blackjack.Common.UI
             {
                 Main.LocalPlayer.mouseInterface = true;
             }
+        }
+
+        public override void LeftClick(UIMouseEvent evt)
+        {
+            base.LeftClick(evt);
+
+            // Check if an item is in selection
+            if (Main.mouseItem != null)
+            {
+                // Then check if the item is a currency, ore, bar, or gem
+                if (Main.mouseItem.IsCurrency || CustomMouseItemCheck(Main.mouseItem))
+                {
+                    item = Main.mouseItem.Clone();
+                    Main.mouseItem.TurnToAir();
+                }
+            }
+        }
+
+        public bool CustomMouseItemCheck(Item item)
+        {
+            int[] items = [ItemID.CopperBar, ItemID.TinBar, ItemID.IronBar, ItemID.LeadBar, ItemID.SilverBar, ItemID.TungstenBar, ItemID.GoldBar, ItemID.PlatinumBar, ItemID.DemoniteBar, ItemID.CrimtaneBar, ItemID.HellstoneBar];
+            if (items.Contains(item.type)) return true;
+            return false;
         }
 
         // Draw the slot with built-in ItemSlot logic

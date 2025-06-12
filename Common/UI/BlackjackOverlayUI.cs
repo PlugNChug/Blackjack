@@ -44,12 +44,15 @@ namespace Blackjack.Common.UI
             closeButton.OnLeftClick += new MouseEvent(CloseButtonClicked);
             BlackjackPanel.Append(closeButton);
 
+            // Blackjack cards
             blackjackGame = new BlackjackGame();
             SetRectangle(blackjackGame, 20f, 50f, 200f, 30f);
             BlackjackPanel.Append(blackjackGame);
 
-            betItemSlot = new BetItemSlot(blackjackGame.BetItem);
-            SetRectangle(betItemSlot, left: 20f, top: boxHeight - 150f, width: 52f, height: 52f);
+            // Betting item slot
+            float betItemSlotSize = 104f;
+            betItemSlot = new BetItemSlot(blackjackGame.BetItem, ItemSlot.Context.BankItem, betItemSlotSize);
+            SetRectangle(betItemSlot, left: 20f, top: boxHeight - 128f, width: betItemSlotSize, height: betItemSlotSize);
             blackjackGame.SetBetItemSlot(betItemSlot);
             BlackjackPanel.Append(betItemSlot);
 
@@ -255,7 +258,7 @@ namespace Blackjack.Common.UI
 
             private bool dealerTurn = false;       // True when the dealer is drawing
             private int dealerDrawDelayTimer = 0;  // Countdown before the next dealer draw
-            private const int DealerDrawDelay = 30; // Frames of delay between dealer draws
+            private const int DealerDrawDelay = 60; // Frames of delay between dealer draws
 
             // Game status text
             DynamicSpriteFont fontBig = FontAssets.DeathText.Value;
@@ -281,17 +284,17 @@ namespace Blackjack.Common.UI
                 }
             }
 
-            public void SetBetItemSlot(BetItemSlot slot)
+            public void SetBetItemSlot(BetItemSlot slotObject)
             {
-                betSlot = slot;
+                betSlot = slotObject;
             }
 
             public void WithdrawBetItem(Player player)
             {
-                if (BetItem != null && !BetItem.IsAir)
+                if (betSlot.item != null && !betSlot.item.IsAir)
                 {
-                    player.QuickSpawnItem(player.GetSource_Misc("Blackjack"), BetItem.type, BetItem.stack);
-                    BetItem.TurnToAir();
+                    player.QuickSpawnItem(player.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack);
+                    betSlot.item.TurnToAir();
                 }
             }
 
