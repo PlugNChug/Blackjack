@@ -38,7 +38,6 @@ namespace Blackjack.Common.UI
 
         public override void OnWorldUnload()
         {
-
             base.OnWorldUnload();
             HideUI();
         }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
@@ -38,7 +39,14 @@ namespace Blackjack.Common.UI
             float boxHeight = 720f;
 
             SetRectangle(BlackjackPanel, left: 400f, top: 100f, width: boxWidth, height: boxHeight);
+
+            // Background and decoration
             BlackjackPanel.BackgroundColor = new Color(16, 119, 40);
+            Asset<Texture2D> gradientTexture = ModContent.Request<Texture2D>("Blackjack/Assets/Gradient");
+            UIImage gradient = new UIImage(gradientTexture);
+            SetRectangle(gradient, left: 0f, top: 0f, width: boxWidth, height: boxHeight);
+            BlackjackPanel.Append(gradient);
+
             // Close button
             Asset<Texture2D> buttonCloseTexture = ModContent.Request<Texture2D>("Terraria/Images/UI/SearchCancel");
             UIHoverImageButton closeButton = new UIHoverImageButton(buttonCloseTexture, Language.GetTextValue("LegacyInterface.52")); // Localized text for "Close"
