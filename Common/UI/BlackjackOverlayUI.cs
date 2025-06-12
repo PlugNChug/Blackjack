@@ -41,11 +41,12 @@ namespace Blackjack.Common.UI
             SetRectangle(BlackjackPanel, left: 400f, top: 100f, width: boxWidth, height: boxHeight);
 
             // Background and decoration
-            BlackjackPanel.BackgroundColor = new Color(16, 119, 40);
-            Asset<Texture2D> gradientTexture = ModContent.Request<Texture2D>("Blackjack/Assets/Gradient");
-            UIImage gradient = new UIImage(gradientTexture);
-            SetRectangle(gradient, left: 0f, top: 0f, width: boxWidth, height: boxHeight);
-            BlackjackPanel.Append(gradient);
+            BlackjackPanel.BackgroundColor = Color.Transparent;
+            BlackjackPanel.BorderColor = Color.Transparent;
+            Asset<Texture2D> tableTexture = ModContent.Request<Texture2D>("Blackjack/Assets/Table");
+            UIImage table = new UIImage(tableTexture);
+            SetRectangle(table, left: 0f, top: 0f, width: boxWidth, height: boxHeight);
+            BlackjackPanel.Append(table);
 
             // Close button
             Asset<Texture2D> buttonCloseTexture = ModContent.Request<Texture2D>("Terraria/Images/UI/SearchCancel");
@@ -56,7 +57,7 @@ namespace Blackjack.Common.UI
 
             // Blackjack cards
             blackjackGame = new BlackjackGame();
-            SetRectangle(blackjackGame, 20f, 50f, 200f, 30f);
+            SetRectangle(blackjackGame, 0f, 50f, boxWidth, boxHeight - 50f);
             BlackjackPanel.Append(blackjackGame);
 
             // Betting item slot
@@ -615,6 +616,9 @@ namespace Blackjack.Common.UI
                 spriteBatch.DrawString(font, playerStatus1, position + new Vector2(10, 350), Color.White);
                 spriteBatch.DrawString(font, playerStatus2, position + new Vector2(10, 365), Color.Yellow);
 
+                int centerX = (int)position.X + (int)(dimensions.Width / 2);
+                int cardWidth = 90;
+
                 // Render player cards
                 for (int i = 0; i < playerCards.Count; i++)
                 {
@@ -622,8 +626,16 @@ namespace Blackjack.Common.UI
                     int cardIndex = playerCards[i];
                     Asset<Texture2D> cardTextureAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_{cardIndex}");
 
-                    // Create small rectangle to draw the card in
-                    Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 400, 90, 128);
+                    // The rectangle to draw the card in
+                    // To be able to position these cards in the center, divide the card count by 2 and place accordingly
+                    float average = (1 + playerCards.Count) / 2f;
+                    Rectangle cardRectangle;
+                    cardRectangle = new Rectangle(centerX - (int)((i + 1 - average) * 150) - (cardWidth / 2), (int)position.Y + 400, cardWidth, 128);
+
+
+
+                    // Old positioning
+                    // Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 400, 90, 128);
 
                     spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
 
@@ -690,7 +702,7 @@ namespace Blackjack.Common.UI
 
                 // Draw the card stack
                 Asset<Texture2D> cardStackAsset = ModContent.Request<Texture2D>("Blackjack/Assets/Cards/card_stack");
-                Rectangle stackRectangle = new Rectangle((int)position.X + 800, (int)position.Y + 250, 90, 135);
+                Rectangle stackRectangle = new Rectangle((int)dimensions.Width - 100, (int)position.Y + 250, 90, 135);
                 spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
 
                 // Render game status text
