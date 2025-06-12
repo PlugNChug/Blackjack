@@ -38,11 +38,14 @@ namespace Blackjack.Common.UI
 
         public override void OnWorldUnload()
         {
+
+            base.OnWorldUnload();
             HideUI();
         }
 
         public override void OnWorldLoad()
         {
+            base.OnWorldLoad();
             HideUI();
         }
 

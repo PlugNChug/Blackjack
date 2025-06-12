@@ -220,7 +220,7 @@ namespace Blackjack.Common.UI
 
         public override void OnDeactivate()
         {
-            blackjackGame.WithdrawBetItem(Main.LocalPlayer);
+            blackjackGame.ResetGame();
             base.OnDeactivate();
         }
 
@@ -322,14 +322,32 @@ namespace Blackjack.Common.UI
                 betSlot = slotObject;
             }
 
-            public void WithdrawBetItem(Player player)
+        public void WithdrawBetItem(Player player)
+        {
+            if (betSlot.item != null && !betSlot.item.IsAir)
             {
-                if (betSlot.item != null && !betSlot.item.IsAir)
-                {
-                    player.QuickSpawnItem(player.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack);
-                    betSlot.item.TurnToAir();
-                }
+                player.QuickSpawnItem(player.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack);
+                betSlot.item.TurnToAir();
             }
+        }
+
+        public void ResetGame()
+        {
+            isGameActive = false;
+            dealerTurn = false;
+            dealerDrawDelayTimer = 0;
+            playerCards.Clear();
+            dealerCards.Clear();
+            dealingQueue.Clear();
+            currentDealingCard = null;
+            playerHandValue = 0;
+            dealerHandValue = 0;
+            dealerFirstCardRevealed = false;
+            flippingDealerCard = false;
+            dealerCardFlipProgress = 0f;
+            gameStatus = string.Empty;
+            WithdrawBetItem(Main.LocalPlayer);
+        }
 
             public void ShuffleCards()
             {
