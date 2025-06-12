@@ -179,6 +179,10 @@ namespace Blackjack.Common.UI
                 return;
             standButtonActive = false;
 
+            // Ensure the panel stops dragging if the button is removed while
+            // the mouse button is still held down.
+            BlackjackPanel.CancelDragging();
+
             SoundEngine.PlaySound(SoundID.ResearchComplete);
 
             // Start the game. First, shuffle the cards
