@@ -11,7 +11,7 @@ namespace Blackjack.Common.UI
 		// Stores the offset from the top left of the UIPanel while dragging
 		private Vector2 offset;
 		// A flag that checks if the panel is currently being dragged
-		private bool dragging;
+        private bool dragging;
 
 		public override void LeftMouseDown(UIMouseEvent evt) {
 			// When you override UIElement methods, don't forget call the base method
@@ -34,15 +34,28 @@ namespace Blackjack.Common.UI
 			dragging = true;
 		}
 
-		private void DragEnd(UIMouseEvent evt) {
-			Vector2 endMousePosition = evt.MousePosition;
-			dragging = false;
+                private void DragEnd(UIMouseEvent evt) {
+                        Vector2 endMousePosition = evt.MousePosition;
+                        dragging = false;
 
 			Left.Set(endMousePosition.X - offset.X, 0f);
 			Top.Set(endMousePosition.Y - offset.Y, 0f);
 
-			Recalculate();
-		}
+                        Recalculate();
+                }
+
+                // Allows external callers to safely stop dragging without
+                // relying on a MouseUp event. Useful when UI elements are
+                // removed while the mouse button is held down.
+                public void CancelDragging() {
+                        if (!dragging)
+                                return;
+
+                        Left.Set(Main.mouseX - offset.X, 0f);
+                        Top.Set(Main.mouseY - offset.Y, 0f);
+                        dragging = false;
+                        Recalculate();
+                }
 
 		public override void Update(GameTime gameTime) {
 			base.Update(gameTime);

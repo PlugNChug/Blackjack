@@ -36,6 +36,18 @@ namespace Blackjack.Common.UI
             blackjackUI.Activate();
         }
 
+        public override void OnWorldUnload()
+        {
+            base.OnWorldUnload();
+            HideUI();
+        }
+
+        public override void OnWorldLoad()
+        {
+            base.OnWorldLoad();
+            HideUI();
+        }
+
         public override void UpdateUI(GameTime gameTime)
         {
             // Here we call .Update on our custom UI and propagate it to its state and underlying elements

@@ -10,7 +10,7 @@ using Terraria.UI;
 namespace Blackjack.Common.UI
 {
     // Simple UIElement wrapper around Terraria.UI.ItemSlot logic.
-    internal class BetItemSlot : UIElement
+    public class BetItemSlot : UIElement
     {
         internal Item item;
         private readonly int context;
@@ -20,7 +20,7 @@ namespace Blackjack.Common.UI
         {
             item = boundItem;
             this.context = context;
-            scale = 1f;
+            scale = 2f;
             Width.Set(size * scale, 0f);
             Height.Set(size * scale, 0f);
         }
@@ -38,22 +38,20 @@ namespace Blackjack.Common.UI
         {
             base.LeftClick(evt);
 
-            // Check if an item is in selection
-            if (Main.mouseItem != null)
+            // Then check if the item is a currency, ore, bar, or gem
+            if (Main.mouseItem.IsCurrency || CustomMouseItemCheck(Main.mouseItem))
             {
-                // Then check if the item is a currency, ore, bar, or gem
-                if (Main.mouseItem.IsCurrency || CustomMouseItemCheck(Main.mouseItem))
-                {
-                    item = Main.mouseItem.Clone();
-                    Main.mouseItem.TurnToAir();
-                }
+                Item temp = item.Clone();
+                item = Main.mouseItem.Clone();
+                Main.mouseItem = temp;
             }
         }
 
         public bool CustomMouseItemCheck(Item item)
         {
             int[] items = [ItemID.CopperBar, ItemID.TinBar, ItemID.IronBar, ItemID.LeadBar, ItemID.SilverBar, ItemID.TungstenBar, ItemID.GoldBar, ItemID.PlatinumBar, ItemID.DemoniteBar, ItemID.CrimtaneBar, ItemID.HellstoneBar];
-            if (items.Contains(item.type)) return true;
+            if (items.Contains(item.type))
+                return true;
             return false;
         }
 
