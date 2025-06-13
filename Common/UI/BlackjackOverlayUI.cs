@@ -59,7 +59,6 @@ namespace Blackjack.Common.UI
             closeButton = new UIHoverImageButton(buttonCloseTexture, Language.GetTextValue("LegacyInterface.52")); // Localized text for "Close"
             SetRectangle(closeButton, left: boxWidth - 60f, top: 40f, width: 44f, height: 44f);
             closeButton.OnLeftClick += new MouseEvent(CloseButtonClicked);
-            BlackjackPanel.Append(closeButton);
 
             // Inactive close button
             Asset<Texture2D> buttonCloseInactiveTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonCloseInactive");
@@ -110,6 +109,9 @@ namespace Blackjack.Common.UI
                 // Upon standing, execute dealer logic
                 blackjackGame.DealerLogic();
             };
+
+            // Append the close button last so it appears above other elements
+            BlackjackPanel.Append(closeButton);
 
 
 
