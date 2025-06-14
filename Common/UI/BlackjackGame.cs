@@ -95,7 +95,42 @@ namespace Blackjack.Common.UI
         private DynamicSpriteFont font = FontAssets.ItemStack.Value;
         private DynamicSpriteFont fontBig = FontAssets.DeathText.Value;
         private string gameStatus = "";
-        private UIPanel statusPanel;
+
+        private StatusPanel statusPanel;
+
+        // Small helper panel that draws the status text above itself
+        private class StatusPanel : UIPanel
+        {
+            private readonly DynamicSpriteFont _font;
+            private string _text = string.Empty;
+
+            public StatusPanel(DynamicSpriteFont font)
+            {
+                _font = font;
+                BackgroundColor = Color.Black * 0.6f;
+                BorderColor = Color.Black;
+                SetPadding(0);
+            }
+
+            public void SetText(string text)
+            {
+                _text = text;
+            }
+
+            protected override void DrawSelf(SpriteBatch spriteBatch)
+            {
+                base.DrawSelf(spriteBatch);
+                if (string.IsNullOrEmpty(_text))
+                    return;
+
+                CalculatedStyle dims = GetDimensions();
+                Vector2 size = _font.MeasureString(_text);
+                Vector2 pos = new Vector2(
+                    dims.X + dims.Width / 2f - size.X / 2f,
+                    dims.Y + dims.Height / 2f - size.Y / 2f);
+                spriteBatch.DrawString(_font, _text, pos, Color.White);
+            }
+        }
 
         // Hand value text
         private string dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
@@ -120,10 +155,7 @@ namespace Blackjack.Common.UI
                 cardList.Add(i);
             }
 
-            statusPanel = new UIPanel();
-            statusPanel.BackgroundColor = Color.Black * 0.6f;
-            statusPanel.BorderColor = Color.Black;
-            statusPanel.SetPadding(0);
+            statusPanel = new StatusPanel(fontBig);
         }
 
         public void SetBetItemSlot(BetItemSlot slotObject)
@@ -550,23 +582,24 @@ namespace Blackjack.Common.UI
 
             // Render game status text centered on the panel
             Vector2 statusSize = fontBig.MeasureString(gameStatus);
-            float panelLeft = position.X + dims.Width / 2 - statusSize.X / 2 - 20f;
-            float panelTop = position.Y + dims.Height / 2 - 10f;
+            float panelLeft = position.X + dims.Width / 2f - statusSize.X / 2f - 20f;
+            float panelTop = position.Y + dims.Height / 2f - statusSize.Y / 2f - 10f;
             statusPanel.Left.Set(panelLeft, 0f);
             statusPanel.Top.Set(panelTop, 0f);
             statusPanel.Width.Set(statusSize.X + 40f, 0f);
             statusPanel.Height.Set(statusSize.Y + 20f, 0f);
-            statusPanel.Recalculate();
-            Vector2 statusPos = new Vector2(position.X + dims.Width / 2 - statusSize.X / 2, position.Y + dims.Height / 2);
+            statusPanel.SetText(gameStatus);
+
             if (gameStatus.Length > 0)
             {
-                Append(statusPanel);
+                if (statusPanel.Parent != this)
+                    Append(statusPanel);
+                statusPanel.Recalculate();
             }
-            else
+            else if (statusPanel.Parent == this)
             {
                 RemoveChild(statusPanel);
             }
-            spriteBatch.DrawString(fontBig, gameStatus, statusPos, Color.White);
         }
 
         public override void Update(GameTime gameTime)
