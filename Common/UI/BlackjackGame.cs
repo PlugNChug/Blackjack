@@ -154,6 +154,9 @@ namespace Blackjack.Common.UI
         // Returns the player's current hand value
         public int GetPlayerHandValue() => playerHandValue;
 
+        // Returns true if the dealer is currently flipping a card
+        public bool GetFlippingDealerCard() => flippingDealerCard;
+
         // True while a card animation or dealer flip animation is occurring
         public bool IsAnimating => currentDealingCard != null || dealingQueue.Count > 0 || flippingDealerCard;
 
@@ -220,7 +223,7 @@ namespace Blackjack.Common.UI
                 cardList[k] = temp;
             }
 
-            // RiggedShuffle(cardList);
+            RiggedShuffle(cardList);
 
             // Reset card index
             cardIndex = 0;
@@ -233,7 +236,7 @@ namespace Blackjack.Common.UI
             l[0] = 0;
             l[1] = 51;
             l[2] = 13;
-            l[3] = 50;
+            l[3] = 0;
             l[4] = 26;
             l[5] = 39;
             l[6] = 1;

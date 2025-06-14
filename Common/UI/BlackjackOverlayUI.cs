@@ -301,7 +301,7 @@ namespace Blackjack.Common.UI
                 DeactivateButtons();
 
             // Main.NewText(betItemSlot.item.stack + " " + !betItemSlot.item.IsAir);
-            if (!blackjackGame.GetActiveGame() && !betItemSlot.item.IsAir && betItemSlot.item.stack > 0)
+            if (!blackjackGame.GetActiveGame() && !betItemSlot.item.IsAir && betItemSlot.item.stack > 0 && !blackjackGame.GetFlippingDealerCard())
                 ActivatePlayButton();
             else
                 DeactivatePlayButton();
