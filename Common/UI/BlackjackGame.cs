@@ -170,6 +170,7 @@ namespace Blackjack.Common.UI
                 player.QuickSpawnItem(player.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack);
                 betSlot.item.TurnToAir();
             }
+            betSlot.EnableInteract();
         }
 
         public void ResetGame()
@@ -188,12 +189,13 @@ namespace Blackjack.Common.UI
             dealerCardFlipProgress = 0f;
             gameStatus = string.Empty;
             WithdrawBetItem(Main.LocalPlayer);
-            dealerStatus2 = "...";
-            playerStatus2 = "...";
         }
 
         public void ShuffleCards()
         {
+            dealerStatus2 = "...";
+            playerStatus2 = "...";
+            betSlot.DisableInteract();
             // Randomly shuffle the deck before a new game starts
             Random rng = new Random();
             int n = cardList.Count;
@@ -205,6 +207,12 @@ namespace Blackjack.Common.UI
                 cardList[n] = cardList[k];
                 cardList[k] = temp;
             }
+
+            // Debug preset cards for testing
+            cardList[0] = 0;
+            cardList[1] = 13;
+            cardList[2] = 12;
+            cardList[3] = 25;
 
             // Reset card index
             cardIndex = 0;
@@ -294,6 +302,40 @@ namespace Blackjack.Common.UI
             }
         }
 
+        private void Payout(string outcome)
+        {
+            switch (outcome) {
+                case "Blackjack":
+                    // 3 to 2 payout
+                    betSlot.item.stack = betSlot.item.stack + (int) (betSlot.item.stack * 1.5f);
+                    if (betSlot.item.stack > 9999)
+                    {
+                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - 9999);
+                        betSlot.item.stack = 9999;
+                    }
+                    break;
+                case "Win":
+                    // 1 to 1 payout
+                    betSlot.item.stack = betSlot.item.stack * 2;
+                    if (betSlot.item.stack > 9999)
+                    {
+                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - 9999);
+                        betSlot.item.stack = 9999;
+                    }
+                    break;
+                case "Lose":
+                    // Lose the items
+                    betSlot.item.TurnToAir();
+                    break;
+                case "Push":
+                    // Nothing happens
+                    break;
+                default:
+                    break;
+            }
+            betSlot.EnableInteract();
+        }
+
         private void DetermineWinner()
         {
             // Compare hand values and announce the result
@@ -302,30 +344,24 @@ namespace Blackjack.Common.UI
             if (dealerHandValue > 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBust");
+                Payout("Win");
             }    
             else if (playerHandValue > dealerHandValue)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerWin");
+                Payout("Win");
             }
             else if (playerHandValue < dealerHandValue)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerWin");
+                Payout("Lose");
             }
             else
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.Push");
+                Payout("Push");
             }
             isGameActive = false;
-            WithdrawBetItem(Main.LocalPlayer);
-        }
-
-        private void StartDealerFlip()
-        {
-            // Begins the animation that reveals the dealer's hidden card
-            if (flippingDealerCard || dealerFirstCardRevealed)
-                return;
-            flippingDealerCard = true;
-            dealerCardFlipProgress = 0f;
         }
 
         private void CalculateHandValues()
@@ -341,6 +377,7 @@ namespace Blackjack.Common.UI
             if (playerCards.Count == 2 && dealerCards.Count == 2 && playerHandValue == 21 && dealerHandValue == 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PushBlackjack");
+                Payout("Push");
                 isGameActive = false;
                 StartDealerFlip();
             }
@@ -349,16 +386,16 @@ namespace Blackjack.Common.UI
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerBlackjack");
                 SoundEngine.PlaySound(SoundID.Meowmere);
+                Payout("Blackjack");
                 isGameActive = false;
                 StartDealerFlip();
-                WithdrawBetItem(Main.LocalPlayer);
             }
             else if (dealerCards.Count == 2 && dealerHandValue == 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBlackjack");
+                Payout("Lose");
                 isGameActive = false;
                 StartDealerFlip();
-                WithdrawBetItem(Main.LocalPlayer);
             }
         }
 
@@ -445,6 +482,15 @@ namespace Blackjack.Common.UI
             return cardHeight;
         }
 
+        private void StartDealerFlip()
+        {
+            // Begins the animation that reveals the dealer's hidden card
+            if (flippingDealerCard || dealerFirstCardRevealed)
+                return;
+            flippingDealerCard = true;
+            dealerCardFlipProgress = 0f;
+        }
+
         private void QueueDealCard(int cardIndex, bool toPlayer, Vector2 endPos)
         {
             CalculatedStyle dims = GetDimensions();
@@ -471,8 +517,7 @@ namespace Blackjack.Common.UI
             int centerX = (int)dims.Center().X;
 
             // Dealer hand value text. Should be rendered above the dealer's cards
-            string dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
-            string dealerStatus2;
+            dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
             if (isGameActive && !dealerFirstCardRevealed && dealerCards.Count > 1)
             {
                 dealerStatus2 = (dealerCards[1] % 13 >= 10 ? 10 : (dealerCards[1] % 13) + 1).ToString() + " + ???";
@@ -487,8 +532,9 @@ namespace Blackjack.Common.UI
             }
 
             // Player hand value text. Should be rendered above the player's cards
-            string playerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.PlayerHand");
-            string playerStatus2 = playerHandValue.ToString();
+            playerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.PlayerHand");
+            if (isGameActive && playerCards.Count > 0)
+                playerStatus2 = playerHandValue.ToString();
 
             if (isGameActive)
             {
@@ -642,9 +688,9 @@ namespace Blackjack.Common.UI
                         if (playerHandValue > 21)
                         {
                             gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerBust");
+                            Payout("Lose");
                             isGameActive = false;
                             StartDealerFlip();
-                            WithdrawBetItem(Main.LocalPlayer);
                         }
                         else if (playerHandValue == 21)
                         {

@@ -24,9 +24,9 @@ Configs: {
 UI: {
 	EmptyBetSlot: Place any form of currency or any metal bar in this slot to bet.
 	DisabledClose: Finish the current game to close the window!
-	Play: "Play!"
-	Hit: "Hit!"
-	Stand: "Stand!"
+	Play: Play!
+	Hit: Hit!
+	Stand: Stand!
 	PlayerWin: You win!
 	PlayerBlackjack: Blackjack! You win!
 	DealerWin: You lose...
