@@ -59,13 +59,13 @@ namespace Blackjack.Common.UI
 
             // Close button
             Asset<Texture2D> buttonCloseTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonClose");
-            closeButton = new UIHoverImageButton(buttonCloseTexture, Language.GetTextValue("LegacyInterface.52")); // Localized text for "Close"
+            closeButton = new UIHoverImageButton(buttonCloseTexture, "LegacyInterface.52"); // Localized text for "Close"
             SetRectangle(closeButton, left: boxWidth - 70f, top: 30f, width: 44f, height: 44f);
             closeButton.OnLeftClick += new MouseEvent(CloseButtonClicked);
 
             // Inactive close button
             Asset<Texture2D> buttonCloseInactiveTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonCloseInactive");
-            closeButtonInactive = new UIHoverImageButton(buttonCloseInactiveTexture, Language.GetTextValue("Mods.Blackjack.UI.DisabledClose"));
+            closeButtonInactive = new UIHoverImageButton(buttonCloseInactiveTexture, "Mods.Blackjack.UI.DisabledClose");
             SetRectangle(closeButtonInactive, left: boxWidth - 70f, top: 30f, width: 44f, height: 44f);
 
             // Blackjack game handler
@@ -82,14 +82,14 @@ namespace Blackjack.Common.UI
 
             // Play button
             Asset<Texture2D> buttonPlayTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonPlay");
-            playButton = new UIHoverImageButton(buttonPlayTexture, Language.GetTextValue("Mods.Blackjack.UI.Play"));
+            playButton = new UIHoverImageButton(buttonPlayTexture, "Mods.Blackjack.UI.Play");
             SetRectangle(playButton, left: boxWidth - 108f, top: boxHeight - 108f, width: 88f, height: 88f);
             playButton.OnLeftClick += new MouseEvent(PlayButtonClicked);
             // BlackjackPanel.Append(playButton); // By default, the play button is hidden until the player places a bet
 
             // Hit button
             Asset<Texture2D> buttonHitTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonHit");
-            hitButton = new UIHoverImageButton(buttonHitTexture, Language.GetTextValue("Mods.Blackjack.UI.Hit"));
+            hitButton = new UIHoverImageButton(buttonHitTexture, "Mods.Blackjack.UI.Hit");
             SetRectangle(hitButton, left: boxWidth / 2 - 96f, top: boxHeight - 108f, width: 88f, height: 88f);
             hitButton.OnLeftClick += (evt, element) =>
             {
@@ -101,7 +101,7 @@ namespace Blackjack.Common.UI
 
             // Stand button
             Asset<Texture2D> buttonStandTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonStand");
-            standButton = new UIHoverImageButton(buttonStandTexture, Language.GetTextValue("Mods.Blackjack.UI.Stand"));
+            standButton = new UIHoverImageButton(buttonStandTexture, "Mods.Blackjack.UI.Stand");
             SetRectangle(standButton, left: boxWidth / 2 + 8f, top: boxHeight - 108f, width: 88f, height: 88f);
             standButton.OnLeftClick += (evt, element) =>
             {
