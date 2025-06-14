@@ -20,20 +20,24 @@ namespace Blackjack.Common.UI
         internal Item item;
         private readonly int context;
         private bool interactable = true;
-        private static readonly HashSet<int> ValidBarItems = new()
+        private static readonly HashSet<int> ValidBarItems = new();
+
+        static BetItemSlot()
         {
-            ItemID.CopperBar,
-            ItemID.TinBar,
-            ItemID.IronBar,
-            ItemID.LeadBar,
-            ItemID.SilverBar,
-            ItemID.TungstenBar,
-            ItemID.GoldBar,
-            ItemID.PlatinumBar,
-            ItemID.DemoniteBar,
-            ItemID.CrimtaneBar,
-            ItemID.HellstoneBar
-        };
+            // Populate the valid bar set dynamically so that every vanilla bar and
+            // any modded bar using the MetalBars tile is automatically included.
+            for (int i = 1; i < ItemLoader.ItemCount; i++)
+            {
+                Item sample = new Item();
+                sample.SetDefaults(i);
+
+                bool nameMatches = Lang.GetItemNameValue(i).Contains("Bar", StringComparison.OrdinalIgnoreCase);
+                if (sample.createTile == TileID.MetalBars || nameMatches)
+                {
+                    ValidBarItems.Add(i);
+                }
+            }
+        }
 
         Asset<Texture2D> itemSlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlot");
         Asset<Texture2D> emptySlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlotEmpty");
