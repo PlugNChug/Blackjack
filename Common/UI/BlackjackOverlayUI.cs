@@ -1,10 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using ReLogic.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -25,6 +21,7 @@ namespace Blackjack.Common.UI
         private BlackjackGame blackjackGame;
         private BetItemSlot betItemSlot;
 
+        private UIImage table;
         private UIHoverImageButton closeButton;
         private UIHoverImageButton closeButtonInactive;
         private UIHoverImageButton playButton;
@@ -41,32 +38,34 @@ namespace Blackjack.Common.UI
             BlackjackPanel = new DraggableUIPanel();
             BlackjackPanel.SetPadding(0);
 
-            float boxWidth = 1280f;
-            float boxHeight = 720f;
+            float uiScale = 0.8f;
+            float boxWidth = 1280f * uiScale;
+            float boxHeight = 720f * uiScale;
 
-            SetRectangle(BlackjackPanel, left: 400f, top: 100f, width: boxWidth, height: boxHeight);
+            SetRectangle(BlackjackPanel, left: 0f, top: Main.screenHeight - boxHeight, width: boxWidth, height: boxHeight);
 
             // Background and decoration
             BlackjackPanel.BackgroundColor = Color.Transparent;
             BlackjackPanel.BorderColor = Color.Transparent;
             Asset<Texture2D> tableTexture = ModContent.Request<Texture2D>("Blackjack/Assets/Table");
-            UIImage table = new UIImage(tableTexture);
+            table = new UIImage(tableTexture);
+            table.ScaleToFit = true;    // Crucial to make the image fit the panel
             SetRectangle(table, left: 0f, top: 0f, width: boxWidth, height: boxHeight);
             BlackjackPanel.Append(table);
 
             // Close button
             Asset<Texture2D> buttonCloseTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonClose");
             closeButton = new UIHoverImageButton(buttonCloseTexture, Language.GetTextValue("LegacyInterface.52")); // Localized text for "Close"
-            SetRectangle(closeButton, left: boxWidth - 60f, top: 40f, width: 44f, height: 44f);
+            SetRectangle(closeButton, left: boxWidth - 70f, top: 30f, width: 44f, height: 44f);
             closeButton.OnLeftClick += new MouseEvent(CloseButtonClicked);
 
             // Inactive close button
             Asset<Texture2D> buttonCloseInactiveTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonCloseInactive");
             closeButtonInactive = new UIHoverImageButton(buttonCloseInactiveTexture, "Finish the current game to close the window!");
-            SetRectangle(closeButtonInactive, left: boxWidth - 60f, top: 40f, width: 44f, height: 44f);
+            SetRectangle(closeButtonInactive, left: boxWidth - 70f, top: 30f, width: 44f, height: 44f);
 
-            // Blackjack cards
-            blackjackGame = new BlackjackGame();
+            // Blackjack game handler
+            blackjackGame = new BlackjackGame(uiScale);
             SetRectangle(blackjackGame, 0f, 50f, boxWidth, boxHeight - 50f);
             BlackjackPanel.Append(blackjackGame);
 
@@ -80,7 +79,7 @@ namespace Blackjack.Common.UI
             // Play button
             Asset<Texture2D> buttonPlayTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonPlay");
             playButton = new UIHoverImageButton(buttonPlayTexture, "Play");
-            SetRectangle(playButton, left: boxWidth - 200f, top: boxHeight - 108f, width: 88f, height: 88f);
+            SetRectangle(playButton, left: boxWidth - 108f, top: boxHeight - 108f, width: 88f, height: 88f);
             playButton.OnLeftClick += new MouseEvent(PlayButtonClicked);
             // BlackjackPanel.Append(playButton); // By default, the play button is hidden until the player places a bet
 

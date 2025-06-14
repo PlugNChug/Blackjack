@@ -39,17 +39,17 @@ namespace Blackjack.Common.UI
     /// </summary>
     public class BlackjackGame : UIElement
     {
-        // Amount of money the player has for betting
-        private int playerMoney;
+        private float uiScale;
 
         // Item placed into the betting slot
         internal Item BetItem;
         private BetItemSlot betSlot;
 
-        public BlackjackGame()
+        public BlackjackGame(float scale = 1f)
         {
             BetItem = new Item();
             BetItem.TurnToAir();
+            uiScale = scale;
         }
 
         // Holds a numeric representation of a standard 52 card deck
@@ -79,7 +79,7 @@ namespace Blackjack.Common.UI
         // Card currently in transit
         private DealingCard currentDealingCard = null;
         // Speed at which cards slide to their destination
-        private float dealSpeed = 0.08f; // Adjust for faster/slower animation
+        private float dealSpeed = 0.05f; // Adjust for faster/slower animation
 
         private bool dealerTurn = false;       // True when the dealer is drawing
         private int dealerDrawDelayTimer = 0;  // Countdown before the next dealer draw
@@ -99,7 +99,6 @@ namespace Blackjack.Common.UI
         public override void OnInitialize()
         {
             base.OnInitialize();
-            playerMoney = 1000; // Starting money
 
             // Initialize a standard deck of 52 cards
             cardList = new List<int>();
@@ -251,12 +250,10 @@ namespace Blackjack.Common.UI
             if (dealerHandValue > 21 || playerHandValue > dealerHandValue)
             {
                 gameStatus = "You win!";
-                playerMoney += betValue;
             }
             else if (playerHandValue < dealerHandValue)
             {
                 gameStatus = "You lose...";
-                playerMoney -= betValue;
             }
             else
             {
@@ -296,7 +293,6 @@ namespace Blackjack.Common.UI
             {
                 gameStatus = "Blackjack! You win!";
                 SoundEngine.PlaySound(SoundID.Meowmere);
-                playerMoney += (int)((BetItem?.value ?? 0) * 1.5f);
                 isGameActive = false;
                 StartDealerFlip();
                 WithdrawBetItem(Main.LocalPlayer);
@@ -304,7 +300,6 @@ namespace Blackjack.Common.UI
             else if (dealerCards.Count == 2 && dealerHandValue == 21)
             {
                 gameStatus = "Dealer Blackjack. You lose...";
-                playerMoney -= BetItem?.value ?? 0;
                 isGameActive = false;
                 StartDealerFlip();
                 WithdrawBetItem(Main.LocalPlayer);
@@ -380,12 +375,7 @@ namespace Blackjack.Common.UI
 
             DynamicSpriteFont font = FontAssets.ItemStack.Value;
 
-            CalculatedStyle dimensions = GetDimensions();
-            Vector2 position = new Vector2(dimensions.X, dimensions.Y);
-
-            // Bet amount info
-            string playerText = "Current bet: " + playerMoney;
-            spriteBatch.DrawString(font, playerText, position + new Vector2(10, 600), Color.White);
+            CalculatedStyle dims = GetDimensions();
 
             // Dealer hand value text. Should be rendered above the dealer's cards
             string dealerStatus1 = "Dealer's hand: ";
@@ -407,13 +397,16 @@ namespace Blackjack.Common.UI
             string playerStatus1 = "Your hand: ";
             string playerStatus2 = playerHandValue.ToString();
 
-            spriteBatch.DrawString(font, dealerStatus1, position + new Vector2(10, 30), Color.White);
-            spriteBatch.DrawString(font, dealerStatus2, position + new Vector2(10, 45), Color.Yellow);
-            spriteBatch.DrawString(font, playerStatus1, position + new Vector2(10, 350), Color.White);
-            spriteBatch.DrawString(font, playerStatus2, position + new Vector2(10, 365), Color.Yellow);
+            if (isGameActive)
+            {
+                spriteBatch.DrawString(font, dealerStatus1, dims.Position() + (new Vector2(20, 30) * uiScale), Color.White);
+                spriteBatch.DrawString(font, dealerStatus2, dims.Position() + new Vector2(20, 50) * uiScale, Color.Yellow);
+                spriteBatch.DrawString(font, playerStatus1, dims.Position() + new Vector2(20, 350) * uiScale, Color.White);
+                spriteBatch.DrawString(font, playerStatus2, dims.Position() + new Vector2(20, 370) * uiScale, Color.Yellow);
+            }
 
-            int centerX = (int)position.X + (int)(dimensions.Width / 2);
-            int cardWidth = 90;
+            float cardWidth = 90 * uiScale;
+            float cardHeight = 128 * uiScale;
 
             // Render player cards
             for (int i = 0; i < playerCards.Count; i++)
@@ -425,16 +418,9 @@ namespace Blackjack.Common.UI
                 // The rectangle to draw the card in
                 // To be able to position these cards in the center, divide the card count by 2 and place accordingly
                 float average = (1 + playerCards.Count) / 2f;
-                Rectangle cardRectangle;
-                cardRectangle = new Rectangle(centerX - (int)((i + 1 - average) * 150) - (cardWidth / 2), (int)position.Y + 400, cardWidth, 128);
-
-
-
-                // Old positioning
-                // Rectangle cardRectangle = new Rectangle((int)position.X + 10 + i * 150, (int)position.Y + 400, 90, 128);
+                Rectangle cardRectangle = new Rectangle((int)(dims.Center().X - ((i + 1 - average) * 150) - (cardWidth / 2)), (int)dims.Y + 400, (int)cardWidth, (int)cardHeight);
 
                 spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
-
             }
 
             // Render dealer cards
@@ -501,11 +487,11 @@ namespace Blackjack.Common.UI
 
             // Draw the card stack
             Asset<Texture2D> cardStackAsset = ModContent.Request<Texture2D>("Blackjack/Assets/Cards/card_stack");
-            Rectangle stackRectangle = new Rectangle((int)position.X + (int)dimensions.Width - 120, (int)position.Y + 250, 90, 135);
+            Rectangle stackRectangle = new Rectangle((int)position.X + (int)dims.Width - 120, (int)position.Y + 250, 90, 135);
             spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
 
             // Render game status text
-            spriteBatch.DrawString(fontBig, gameStatus, new Vector2(position.X + dimensions.Width / 2 - fontBig.MeasureString(gameStatus).X / 2, position.Y + dimensions.Height / 2), Color.White);
+            spriteBatch.DrawString(fontBig, gameStatus, new Vector2(position.X + dims.Width / 2 - fontBig.MeasureString(gameStatus).X / 2, position.Y + dims.Height / 2), Color.White);
 
         }
 
@@ -551,7 +537,6 @@ namespace Blackjack.Common.UI
                             gameStatus = "Bust. You lose...";
                             isGameActive = false;
                             StartDealerFlip();
-                            playerMoney -= BetItem?.value ?? 0;
                             WithdrawBetItem(Main.LocalPlayer);
                         }
                         else if (playerHandValue == 21)
