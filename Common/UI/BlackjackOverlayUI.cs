@@ -295,7 +295,7 @@ namespace Blackjack.Common.UI
                 ApplyScale();
             }
 
-            if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating && !playerStood)
+            if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating && !playerStood && blackjackGame.GetPlayerHandValue() < 21)
                 ActivateButtons();
             else
                 DeactivateButtons();

@@ -151,6 +151,9 @@ namespace Blackjack.Common.UI
         // Returns true if a game is currently in progress
         public bool GetActiveGame() => isGameActive;
 
+        // Returns the player's current hand value
+        public int GetPlayerHandValue() => playerHandValue;
+
         // True while a card animation or dealer flip animation is occurring
         public bool IsAnimating => currentDealingCard != null || dealingQueue.Count > 0 || flippingDealerCard;
 
