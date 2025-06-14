@@ -159,7 +159,6 @@ namespace Blackjack.Common.UI
             float bottomOffset = Math.Max(108f * uiScale, 108f);
             SetRectangle(betItemSlot, 20f, boxHeight - bottomOffset, betItemSlotSize, betItemSlotSize);
 
-            Main.NewText(boxHeight - bottomOffset);
             SetRectangle(playButton, boxWidth - 108f, boxHeight - bottomOffset, 88f, 88f);
             SetRectangle(hitButton, boxWidth / 2 - 96f, boxHeight - bottomOffset, 88f, 88f);
             SetRectangle(standButton, boxWidth / 2 + 8f, boxHeight - bottomOffset, 88f, 88f);
