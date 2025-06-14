@@ -1,1 +1,7 @@
-This description will show up on the steam page, check out https://steamcommunity.com/comment/Guide/formattinghelp.
+[h1]Blackjack in Terraria[/h1]
+[h2]Version: {ModVersion}[/h2]
+
+A custom UI that allows you to gamble in-game currencies and items.
+
+Original card images by Daniel Fowler on Tek Eye:
+https://tekeye.uk/playing_cards/svg-playing-cards

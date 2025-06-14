@@ -54,7 +54,7 @@ namespace Blackjack.Common.UI
             BetItem.TurnToAir();
             uiScale = scale;
             cardWidth = (int)(ModContent.GetInstance<Appearance>().BlackjackCardScale * uiScale);
-            cardHeight = (int)(cardWidth * 1.422f);
+            cardHeight = (int)(cardWidth * 1.422f); // 1.422f is the ratio of the typical playing card height to width
             stackHeight = (int)(cardWidth * 1.509f);
         }
 
@@ -223,7 +223,7 @@ namespace Blackjack.Common.UI
                 cardList[k] = temp;
             }
 
-            RiggedShuffle(cardList);
+            // RiggedShuffle(cardList);
 
             // Reset card index
             cardIndex = 0;

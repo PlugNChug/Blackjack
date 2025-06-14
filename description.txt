@@ -1,4 +1,4 @@
-Gambling in Terraria.
+A custom UI that allows you to gamble in-game currencies and items.
 
-Card images by Daniel Fowler on Tek Eye:
+Original card images by Daniel Fowler on Tek Eye:
 https://tekeye.uk/playing_cards/svg-playing-cards
