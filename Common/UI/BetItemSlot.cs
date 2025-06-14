@@ -20,20 +20,28 @@ namespace Blackjack.Common.UI
         internal Item item;
         private readonly int context;
         private bool interactable = true;
-        private static readonly HashSet<int> ValidBarItems = new()
+        private static readonly HashSet<int> ValidBarItems = new();
+        private static bool barListInitialized;
+
+        // Build the set of valid bar items on demand, after all mods finish loading
+        private static void EnsureValidBarList()
         {
-            ItemID.CopperBar,
-            ItemID.TinBar,
-            ItemID.IronBar,
-            ItemID.LeadBar,
-            ItemID.SilverBar,
-            ItemID.TungstenBar,
-            ItemID.GoldBar,
-            ItemID.PlatinumBar,
-            ItemID.DemoniteBar,
-            ItemID.CrimtaneBar,
-            ItemID.HellstoneBar
-        };
+            if (barListInitialized)
+                return;
+
+            barListInitialized = true;
+            ValidBarItems.Clear();
+
+            for (int i = 1; i < ItemLoader.ItemCount; i++)
+            {
+                Item sample = ContentSamples.ItemsByType[i];
+                bool nameMatches = Lang.GetItemNameValue(i).Contains("Bar", StringComparison.OrdinalIgnoreCase);
+                if (sample.createTile == TileID.MetalBars || nameMatches)
+                {
+                    ValidBarItems.Add(i);
+                }
+            }
+        }
 
         Asset<Texture2D> itemSlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlot");
         Asset<Texture2D> emptySlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlotEmpty");
@@ -85,6 +93,7 @@ namespace Blackjack.Common.UI
 
         public static bool IsValidBetItem(Item check)
         {
+            EnsureValidBarList();
             return ValidBarItems.Contains(check.type);
         }
 
