@@ -1,7 +1,21 @@
 Items: {
-	Blackjack: {
-		Tooltip: ""
-		DisplayName: Blackjack
+	GiantBlackjackChip: {
+		Tooltip:
+			'''
+			Opens the Blackjack UI.
+			 
+			Place any currency or metal bar in the bet slot to place a bet.
+			The game cannot start without a bet.
+			 
+			Winning will return double the bet item's stack,
+			and getting a blackjack will return 2.5x the item's stack.
+			Losing will delete the bet items.
+			 
+			The deck is reset after each game.
+			 
+			WARNING: Exiting the world while items are in the bet slot will cause them to be lost.
+			'''
+		DisplayName: Giant Blackjack Chip
 	}
 }
 
@@ -11,12 +25,12 @@ Configs: {
 
 		BlackjackUIScale: {
 			Label: Blackjack Popup UI Scale
-			Tooltip: The overall scaling of the blackjack UI. Larger values result in more of the screen being taken up by the UI.
+			Tooltip: The overall scaling of the blackjack UI. Larger values result in more of the screen being taken up by the UI. Scale is relative to ~1280x720.
 		}
 
 		BlackjackCardScale: {
 			Label: Blackjack Card Scale
-			Tooltip: How large the cards and the card stack are.
+			Tooltip: How large the cards and the card stack are. The number signifies the width in pixels of each card and the card stack with 1.0x scaling.
 		}
 	}
 }
