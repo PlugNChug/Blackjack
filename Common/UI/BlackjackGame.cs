@@ -515,7 +515,7 @@ namespace Blackjack.Common.UI
 
             // Draw the card stack
             Asset<Texture2D> cardStackAsset = ModContent.Request<Texture2D>("Blackjack/Assets/Cards/card_stack");
-            Rectangle stackRectangle = new Rectangle((int)position.X + (int)dims.Width - 120, (int)(position.Y + 250 * uiScale), cardWidth, (int)(135 * uiScale));
+            Rectangle stackRectangle = new Rectangle((int)(position.X + dims.Width - 120 * uiScale), (int)(position.Y + 225 * uiScale), cardWidth, (int)(135 * uiScale));
             spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
 
             // Render game status text

@@ -9,6 +9,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
+using Blackjack.Common.Config;
 
 namespace Blackjack.Common.UI
 {
@@ -33,15 +34,18 @@ namespace Blackjack.Common.UI
         private bool playButtonActive = false;      // The play button is active if no game is in progress and the player has placed a bet
         private bool closeButtonActive = true;     // The close button is active if no game is in progress
 
+        float uiScale = ModContent.GetInstance<UIScale>().BlackjackUIScale;
+        float boxWidth;
+        float boxHeight;
+
         public override void OnInitialize()
         {
+            boxWidth = 1280f * uiScale;
+            boxHeight = 720f * uiScale;
+
+            // Blackjack UI Panel
             BlackjackPanel = new DraggableUIPanel();
             BlackjackPanel.SetPadding(0);
-
-            float uiScale = 0.6f;
-            float boxWidth = 1280f * uiScale;
-            float boxHeight = 720f * uiScale;
-
             SetRectangle(BlackjackPanel, left: 0f, top: Main.screenHeight - boxHeight, width: boxWidth, height: boxHeight);
 
             // Background and decoration
@@ -70,9 +74,9 @@ namespace Blackjack.Common.UI
             BlackjackPanel.Append(blackjackGame);
 
             // Betting item slot
-            float betItemSlotSize = 104f;
+            float betItemSlotSize = 88f;
             betItemSlot = new BetItemSlot(blackjackGame.BetItem, ItemSlot.Context.BankItem, betItemSlotSize);
-            SetRectangle(betItemSlot, left: 60f, top: boxHeight - 128f, width: betItemSlotSize, height: betItemSlotSize);
+            SetRectangle(betItemSlot, left: 20f, top: boxHeight - 108f, width: betItemSlotSize, height: betItemSlotSize);
             blackjackGame.SetBetItemSlot(betItemSlot);
             BlackjackPanel.Append(betItemSlot);
 
@@ -261,6 +265,8 @@ namespace Blackjack.Common.UI
             // Main.NewText(betItemSlot.item.stack + " " + !betItemSlot.item.IsAir);
             if (!blackjackGame.GetActiveGame() && !betItemSlot.item.IsAir && betItemSlot.item.stack > 0)
                 ActivatePlayButton();
+            else
+                DeactivatePlayButton();
 
             if (blackjackGame.GetActiveGame())
                 DeactivateCloseButton();
