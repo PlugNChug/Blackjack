@@ -90,6 +90,7 @@ namespace Blackjack.Common.UI
         private bool dealerTurn = false;       // True when the dealer is drawing
         private int dealerDrawDelayTimer = 0;  // Countdown before the next dealer draw
         private const int DealerDrawDelay = 60; // Frames of delay between dealer draws
+        private bool pendingDealerNatural = false; // Waits for dealer flip before payout
 
         // Game status text and panel
         private DynamicSpriteFont font = FontAssets.ItemStack.Value;
@@ -394,11 +395,12 @@ namespace Blackjack.Common.UI
             }
             else if (dealerCards.Count == 2 && dealerHandValue == 21)
             {
+                // Reveal the dealer's hidden card before resolving the round
+                StartDealerFlip();
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBlackjack");
-                Payout("Lose");
+                pendingDealerNatural = true;
                 isGameActive = false;
                 dealerTurn = false;
-                StartDealerFlip();
             }
         }
 
@@ -664,6 +666,12 @@ namespace Blackjack.Common.UI
                     flippingDealerCard = false;
                     dealerFirstCardRevealed = true;
                 }
+            }
+
+            if (pendingDealerNatural && !flippingDealerCard && dealerFirstCardRevealed)
+            {
+                Payout("Lose");
+                pendingDealerNatural = false;
             }
 
             if (currentDealingCard == null && dealingQueue.Count > 0)
