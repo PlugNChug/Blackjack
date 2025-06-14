@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using ReLogic.Graphics;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -20,6 +20,21 @@ namespace Blackjack.Common.UI
         internal Item item;
         private readonly int context;
         private bool interactable = true;
+        private static readonly HashSet<int> ValidBarItems = new()
+        {
+            ItemID.CopperBar,
+            ItemID.TinBar,
+            ItemID.IronBar,
+            ItemID.LeadBar,
+            ItemID.SilverBar,
+            ItemID.TungstenBar,
+            ItemID.GoldBar,
+            ItemID.PlatinumBar,
+            ItemID.DemoniteBar,
+            ItemID.CrimtaneBar,
+            ItemID.HellstoneBar
+        };
+
         Asset<Texture2D> itemSlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlot");
         Asset<Texture2D> emptySlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlotEmpty");
 
@@ -57,7 +72,7 @@ namespace Blackjack.Common.UI
             // Then check if the item is a currency, ore, bar, or gem
             if (interactable)
             {
-                if (Main.mouseItem.IsCurrency || CustomMouseItemCheck(Main.mouseItem) || Main.mouseItem.IsAir)
+                if (Main.mouseItem.IsCurrency || IsValidBetItem(Main.mouseItem) || Main.mouseItem.IsAir)
                 {
                     Item temp = item.Clone();
                     item = Main.mouseItem.Clone();
@@ -68,12 +83,9 @@ namespace Blackjack.Common.UI
             }
         }
 
-        public bool CustomMouseItemCheck(Item item)
+        public static bool IsValidBetItem(Item check)
         {
-            int[] items = [ItemID.CopperBar, ItemID.TinBar, ItemID.IronBar, ItemID.LeadBar, ItemID.SilverBar, ItemID.TungstenBar, ItemID.GoldBar, ItemID.PlatinumBar, ItemID.DemoniteBar, ItemID.CrimtaneBar, ItemID.HellstoneBar];
-            if (items.Contains(item.type))
-                return true;
-            return false;
+            return ValidBarItems.Contains(check.type);
         }
 
         // Draw the slot with built-in ItemSlot logic
