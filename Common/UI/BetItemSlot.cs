@@ -1,11 +1,16 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using ReLogic.Graphics;
+using System;
 using System.Linq;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
-using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
+using Terraria.ModLoader;
 using Terraria.UI;
+using Terraria.Localization;
 
 namespace Blackjack.Common.UI
 {
@@ -14,15 +19,16 @@ namespace Blackjack.Common.UI
     {
         internal Item item;
         private readonly int context;
-        private readonly float scale;
+        private bool interactable = true;
+        Asset<Texture2D> itemSlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlot");
+        Asset<Texture2D> emptySlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlotEmpty");
 
-        public BetItemSlot(Item boundItem, int context = ItemSlot.Context.BankItem, float size = 52f)
+        public BetItemSlot(Item boundItem, int context = ItemSlot.Context.CreativeSacrifice, float size = 88f)
         {
             item = boundItem;
             this.context = context;
-            scale = 2f;
-            Width.Set(size * scale, 0f);
-            Height.Set(size * scale, 0f);
+            Width.Set(size, 0f);
+            Height.Set(size, 0f);
         }
 
         public override void Update(GameTime gameTime)
@@ -34,16 +40,31 @@ namespace Blackjack.Common.UI
             }
         }
 
+        public void DisableInteract()
+        {
+            interactable = false;
+        }
+
+        public void EnableInteract()
+        {
+            interactable = true;
+        }
+
         public override void LeftClick(UIMouseEvent evt)
         {
             base.LeftClick(evt);
 
             // Then check if the item is a currency, ore, bar, or gem
-            if (Main.mouseItem.IsCurrency || CustomMouseItemCheck(Main.mouseItem))
+            if (interactable)
             {
-                Item temp = item.Clone();
-                item = Main.mouseItem.Clone();
-                Main.mouseItem = temp;
+                if (Main.mouseItem.IsCurrency || CustomMouseItemCheck(Main.mouseItem) || Main.mouseItem.IsAir)
+                {
+                    Item temp = item.Clone();
+                    item = Main.mouseItem.Clone();
+                    Main.mouseItem = temp;
+                    if (!Main.mouseItem.IsAir && !item.IsAir)
+                        SoundEngine.PlaySound(SoundID.Grab);
+                }
             }
         }
 
@@ -58,9 +79,44 @@ namespace Blackjack.Common.UI
         // Draw the slot with built-in ItemSlot logic
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            base.DrawSelf(spriteBatch);
             CalculatedStyle dims = GetDimensions();
-            ItemSlot.Draw(spriteBatch, ref item, context, dims.Position());
+            spriteBatch.Draw(itemSlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.White);
+            if (!item.IsAir)
+            {
+                // Get the texture for the item
+                Main.instance.LoadItem(item.type);
+                Texture2D itemTexture = TextureAssets.Item[item.type].Value;
+
+                // Calculate the scale (prevents distortion)
+                float targetWidth = dims.Width / 2f;
+                float targetHeight = dims.Height / 2f;
+                float scale = Math.Min(targetWidth / itemTexture.Width, targetHeight / itemTexture.Height);
+
+                int drawWidth = (int)(itemTexture.Width * scale);
+                int drawHeight = (int)(itemTexture.Height * scale);
+                Rectangle drawRect = new Rectangle((int)(dims.X + dims.Width / 2f - drawWidth / 2f), (int)(dims.Y + dims.Height / 2f - drawHeight / 2f), drawWidth, drawHeight);
+
+                // Draw the item with PointClamp sampling (prevents blurring)
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+                spriteBatch.Draw(itemTexture, drawRect, Color.White);
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+
+                // Draw the item count
+                DynamicSpriteFont font = FontAssets.ItemStack.Value;
+                string stack = item.stack.ToString();
+                spriteBatch.DrawString(font, stack, new Vector2(dims.X + dims.Width / 2 - font.MeasureString(stack).X / 2, dims.Y + dims.Height - 30f), Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(emptySlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.White);
+            }
+
+            if (IsMouseHovering && item.IsAir)
+            {
+                Main.hoverItemName = Language.GetTextValue("Mods.Blackjack.UI.EmptyBetSlot");
+            }
         }
     }
 }

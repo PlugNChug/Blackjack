@@ -1,10 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using ReLogic.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -13,6 +9,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
+using Blackjack.Common.Config;
 
 namespace Blackjack.Common.UI
 {
@@ -25,6 +22,7 @@ namespace Blackjack.Common.UI
         private BlackjackGame blackjackGame;
         private BetItemSlot betItemSlot;
 
+        private UIImage table;
         private UIHoverImageButton closeButton;
         private UIHoverImageButton closeButtonInactive;
         private UIHoverImageButton playButton;
@@ -36,58 +34,62 @@ namespace Blackjack.Common.UI
         private bool playButtonActive = false;      // The play button is active if no game is in progress and the player has placed a bet
         private bool closeButtonActive = true;     // The close button is active if no game is in progress
 
+        float uiScale = ModContent.GetInstance<Appearance>().BlackjackUIScale;
+        float boxWidth;
+        float boxHeight;
+
         public override void OnInitialize()
         {
+            boxWidth = 1280f * uiScale;
+            boxHeight = 720f * uiScale;
+
+            // Blackjack UI Panel
             BlackjackPanel = new DraggableUIPanel();
             BlackjackPanel.SetPadding(0);
-
-            float boxWidth = 1280f;
-            float boxHeight = 720f;
-
-            SetRectangle(BlackjackPanel, left: 400f, top: 100f, width: boxWidth, height: boxHeight);
+            SetRectangle(BlackjackPanel, left: 0f, top: Main.screenHeight - boxHeight, width: boxWidth, height: boxHeight);
 
             // Background and decoration
             BlackjackPanel.BackgroundColor = Color.Transparent;
             BlackjackPanel.BorderColor = Color.Transparent;
             Asset<Texture2D> tableTexture = ModContent.Request<Texture2D>("Blackjack/Assets/Table");
-            UIImage table = new UIImage(tableTexture);
+            table = new UIImage(tableTexture);
+            table.ScaleToFit = true;    // Crucial to make the image fit the panel
             SetRectangle(table, left: 0f, top: 0f, width: boxWidth, height: boxHeight);
             BlackjackPanel.Append(table);
 
             // Close button
             Asset<Texture2D> buttonCloseTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonClose");
             closeButton = new UIHoverImageButton(buttonCloseTexture, Language.GetTextValue("LegacyInterface.52")); // Localized text for "Close"
-            SetRectangle(closeButton, left: boxWidth - 60f, top: 40f, width: 44f, height: 44f);
+            SetRectangle(closeButton, left: boxWidth - 70f, top: 30f, width: 44f, height: 44f);
             closeButton.OnLeftClick += new MouseEvent(CloseButtonClicked);
-            BlackjackPanel.Append(closeButton);
 
             // Inactive close button
             Asset<Texture2D> buttonCloseInactiveTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonCloseInactive");
-            closeButtonInactive = new UIHoverImageButton(buttonCloseInactiveTexture, "Finish the current game to close the window!");
-            SetRectangle(closeButtonInactive, left: boxWidth - 60f, top: 40f, width: 44f, height: 44f);
+            closeButtonInactive = new UIHoverImageButton(buttonCloseInactiveTexture, Language.GetTextValue("Mods.Blackjack.UI.DisabledClose"));
+            SetRectangle(closeButtonInactive, left: boxWidth - 70f, top: 30f, width: 44f, height: 44f);
 
-            // Blackjack cards
-            blackjackGame = new BlackjackGame();
+            // Blackjack game handler
+            blackjackGame = new BlackjackGame(uiScale);
             SetRectangle(blackjackGame, 0f, 50f, boxWidth, boxHeight - 50f);
             BlackjackPanel.Append(blackjackGame);
 
             // Betting item slot
-            float betItemSlotSize = 104f;
+            float betItemSlotSize = 88f;
             betItemSlot = new BetItemSlot(blackjackGame.BetItem, ItemSlot.Context.BankItem, betItemSlotSize);
-            SetRectangle(betItemSlot, left: 60f, top: boxHeight - 128f, width: betItemSlotSize, height: betItemSlotSize);
+            SetRectangle(betItemSlot, left: 20f, top: boxHeight - 108f, width: betItemSlotSize, height: betItemSlotSize);
             blackjackGame.SetBetItemSlot(betItemSlot);
             BlackjackPanel.Append(betItemSlot);
 
             // Play button
             Asset<Texture2D> buttonPlayTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonPlay");
-            playButton = new UIHoverImageButton(buttonPlayTexture, "Play");
-            SetRectangle(playButton, left: boxWidth - 200f, top: boxHeight - 108f, width: 88f, height: 88f);
+            playButton = new UIHoverImageButton(buttonPlayTexture, Language.GetTextValue("Mods.Blackjack.UI.Play"));
+            SetRectangle(playButton, left: boxWidth - 108f, top: boxHeight - 108f, width: 88f, height: 88f);
             playButton.OnLeftClick += new MouseEvent(PlayButtonClicked);
             // BlackjackPanel.Append(playButton); // By default, the play button is hidden until the player places a bet
 
             // Hit button
             Asset<Texture2D> buttonHitTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonHit");
-            hitButton = new UIHoverImageButton(buttonHitTexture, "Hit");
+            hitButton = new UIHoverImageButton(buttonHitTexture, Language.GetTextValue("Mods.Blackjack.UI.Hit"));
             SetRectangle(hitButton, left: boxWidth / 2 - 96f, top: boxHeight - 108f, width: 88f, height: 88f);
             hitButton.OnLeftClick += (evt, element) =>
             {
@@ -99,7 +101,7 @@ namespace Blackjack.Common.UI
 
             // Stand button
             Asset<Texture2D> buttonStandTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonStand");
-            standButton = new UIHoverImageButton(buttonStandTexture, "Stand");
+            standButton = new UIHoverImageButton(buttonStandTexture, Language.GetTextValue("Mods.Blackjack.UI.Stand"));
             SetRectangle(standButton, left: boxWidth / 2 + 8f, top: boxHeight - 108f, width: 88f, height: 88f);
             standButton.OnLeftClick += (evt, element) =>
             {
@@ -110,6 +112,9 @@ namespace Blackjack.Common.UI
                 // Upon standing, execute dealer logic
                 blackjackGame.DealerLogic();
             };
+
+            // Append the close button last so it appears above other elements
+            BlackjackPanel.Append(closeButton);
 
 
 
@@ -260,6 +265,8 @@ namespace Blackjack.Common.UI
             // Main.NewText(betItemSlot.item.stack + " " + !betItemSlot.item.IsAir);
             if (!blackjackGame.GetActiveGame() && !betItemSlot.item.IsAir && betItemSlot.item.stack > 0)
                 ActivatePlayButton();
+            else
+                DeactivatePlayButton();
 
             if (blackjackGame.GetActiveGame())
                 DeactivateCloseButton();

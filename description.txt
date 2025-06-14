@@ -1,1 +1,4 @@
-Modify this file with a description of your mod.
+Gambling in Terraria.
+
+Card images by Daniel Fowler on Tek Eye:
+https://tekeye.uk/playing_cards/svg-playing-cards
