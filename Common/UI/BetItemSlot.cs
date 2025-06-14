@@ -81,11 +81,24 @@ namespace Blackjack.Common.UI
             if (!item.IsAir)
             {
                 Main.instance.LoadItem(item.type);
-                spriteBatch.Draw(TextureAssets.Item[item.type].Value, new Rectangle((int)(dims.X + dims.Width / 4), (int)(dims.Y + dims.Height / 4), (int)dims.Width / 2, (int)dims.Height / 2), Color.White);
+                Texture2D itemTexture = TextureAssets.Item[item.type].Value;
+
+                float targetWidth = dims.Width / 2f;
+                float targetHeight = dims.Height / 2f;
+                float scale = Math.Min(targetWidth / itemTexture.Width, targetHeight / itemTexture.Height);
+
+                int drawWidth = (int)(itemTexture.Width * scale);
+                int drawHeight = (int)(itemTexture.Height * scale);
+                Rectangle drawRect = new Rectangle((int)(dims.X + dims.Width / 2f - drawWidth / 2f), (int)(dims.Y + dims.Height / 2f - drawHeight / 2f), drawWidth, drawHeight);
+
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+                spriteBatch.Draw(itemTexture, drawRect, Color.White);
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
             }
             else
             {
-                spriteBatch.Begin(SamplerState.PointClamp); // Supposedly prevents interpolation when scaling images
                 spriteBatch.Draw(emptySlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.White);
             }
         }
