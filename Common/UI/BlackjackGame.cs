@@ -217,8 +217,30 @@ namespace Blackjack.Common.UI
                 cardList[k] = temp;
             }
 
+            // RiggedShuffle(cardList);
+
             // Reset card index
             cardIndex = 0;
+        }
+
+        // For debugging purposes. Kept here for reference
+        private void RiggedShuffle(List<int> l)
+        {
+            // This sequence sets the player up for the highest possible number of cards without busting. UI edge case
+            l[0] = 0;
+            l[1] = 51;
+            l[2] = 13;
+            l[3] = 50;
+            l[4] = 26;
+            l[5] = 39;
+            l[6] = 1;
+            l[7] = 14;
+            l[8] = 27;
+            l[9] = 40;
+            l[10] = 2;
+            l[11] = 15;
+            l[12] = 28;
+
         }
 
         public void InitialDeal()
@@ -311,20 +333,12 @@ namespace Blackjack.Common.UI
                 case "Blackjack":
                     // 3 to 2 payout
                     betSlot.item.stack = betSlot.item.stack + (int) (betSlot.item.stack * 1.5f);
-                    if (betSlot.item.stack > betSlot.item.maxStack)
-                    {
-                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - betSlot.item.maxStack);
-                        betSlot.item.stack = betSlot.item.maxStack;
-                    }
+                    OverstackHelper(betSlot.item);
                     break;
                 case "Win":
                     // 1 to 1 payout
                     betSlot.item.stack = betSlot.item.stack * 2;
-                    if (betSlot.item.stack > betSlot.item.maxStack)
-                    {
-                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - betSlot.item.maxStack);
-                        betSlot.item.stack = betSlot.item.maxStack;
-                    }
+                    OverstackHelper(betSlot.item);
                     break;
                 case "Lose":
                     // Lose the items
@@ -337,6 +351,24 @@ namespace Blackjack.Common.UI
                     break;
             }
             betSlot.EnableInteract();
+        }
+
+        private void OverstackHelper(Item item)
+        {
+            while (item.stack > item.maxStack)
+            {
+                if (item.stack - item.maxStack > item.maxStack)
+                {
+                    Item.NewItem(item.GetSource_Misc("Blackjack"), Main.LocalPlayer.position, item.type, item.maxStack);
+                    item.stack -= item.maxStack;
+                }
+                else
+                {
+                    Item.NewItem(item.GetSource_Misc("Blackjack"), Main.LocalPlayer.position, item.type, item.stack - item.maxStack);
+                    item.stack = item.maxStack;
+                }
+            }
+
         }
 
         private void DetermineWinner()
