@@ -108,7 +108,7 @@ namespace Blackjack.Common.UI
             public StatusPanel(DynamicSpriteFont font)
             {
                 _font = font;
-                BackgroundColor = Color.Black * 0.6f;
+                BackgroundColor = Color.Black * 0.8f;
                 BorderColor = Color.Black;
                 SetPadding(0);
             }
