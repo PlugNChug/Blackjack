@@ -295,13 +295,13 @@ namespace Blackjack.Common.UI
                 ApplyScale();
             }
 
-            if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating && !playerStood)
+            if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating && !playerStood && blackjackGame.GetPlayerHandValue() < 21)
                 ActivateButtons();
             else
                 DeactivateButtons();
 
             // Main.NewText(betItemSlot.item.stack + " " + !betItemSlot.item.IsAir);
-            if (!blackjackGame.GetActiveGame() && !betItemSlot.item.IsAir && betItemSlot.item.stack > 0)
+            if (!blackjackGame.GetActiveGame() && !betItemSlot.item.IsAir && betItemSlot.item.stack > 0 && !blackjackGame.GetFlippingDealerCard())
                 ActivatePlayButton();
             else
                 DeactivatePlayButton();
