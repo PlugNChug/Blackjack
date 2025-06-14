@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -35,11 +36,16 @@ namespace Blackjack.Common.UI
         private bool closeButtonActive = true;     // The close button is active if no game is in progress
 
         float uiScale = ModContent.GetInstance<Appearance>().BlackjackUIScale;
+        float prevUIScale;
+        int prevCardScale;
         float boxWidth;
         float boxHeight;
 
         public override void OnInitialize()
         {
+            prevUIScale = uiScale;
+            prevCardScale = ModContent.GetInstance<Appearance>().BlackjackCardScale;
+
             boxWidth = 1280f * uiScale;
             boxHeight = 720f * uiScale;
 
@@ -116,8 +122,7 @@ namespace Blackjack.Common.UI
             // Append the close button last so it appears above other elements
             BlackjackPanel.Append(closeButton);
 
-
-
+            ApplyScale();
             Append(BlackjackPanel);
         }
 
@@ -136,6 +141,27 @@ namespace Blackjack.Common.UI
             uiElement.Top.Set(top, 0f);
             uiElement.Width.Set(width, 0f);
             uiElement.Height.Set(height, 0f);
+        }
+
+        private void ApplyScale()
+        {
+            boxWidth = 1280f * uiScale;
+            boxHeight = 720f * uiScale;
+
+            SetRectangle(BlackjackPanel, 0f, Main.screenHeight - boxHeight, boxWidth, boxHeight);
+            SetRectangle(table, 0f, 0f, boxWidth, boxHeight);
+            SetRectangle(closeButton, boxWidth - 70f, 30f, 44f, 44f);
+            SetRectangle(closeButtonInactive, boxWidth - 70f, 30f, 44f, 44f);
+            SetRectangle(blackjackGame, 0f, 50f, boxWidth, boxHeight - 50f);
+
+            float betItemSlotSize = betItemSlot.Width.Pixels;
+            SetRectangle(betItemSlot, 20f, boxHeight - 108f, betItemSlotSize, betItemSlotSize);
+
+            SetRectangle(playButton, boxWidth - 108f, boxHeight - 108f, 88f, 88f);
+            SetRectangle(hitButton, boxWidth / 2 - 96f, boxHeight - 108f, 88f, 88f);
+            SetRectangle(standButton, boxWidth / 2 + 8f, boxHeight - 108f, 88f, 88f);
+
+            blackjackGame.ApplyScale(uiScale);
         }
 
         /// <summary>
@@ -256,6 +282,16 @@ namespace Blackjack.Common.UI
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
+
+            float cfgScale = ModContent.GetInstance<Appearance>().BlackjackUIScale;
+            int cfgCardScale = ModContent.GetInstance<Appearance>().BlackjackCardScale;
+            if (Math.Abs(cfgScale - prevUIScale) > 0.001f || cfgCardScale != prevCardScale)
+            {
+                uiScale = cfgScale;
+                prevUIScale = cfgScale;
+                prevCardScale = cfgCardScale;
+                ApplyScale();
+            }
 
             if (blackjackGame.GetActiveGame() && !blackjackGame.IsAnimating && !playerStood)
                 ActivateButtons();
