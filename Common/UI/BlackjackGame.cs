@@ -379,15 +379,17 @@ namespace Blackjack.Common.UI
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PushBlackjack");
                 Payout("Push");
                 isGameActive = false;
+                dealerTurn = false;
                 StartDealerFlip();
             }
-            // Then, check for player natural
-            else if (playerCards.Count == 2 && playerHandValue == 21)
+            // Then, check for player natural - only evaluate once the dealer has received their second card
+            else if (playerCards.Count == 2 && dealerCards.Count >= 2 && playerHandValue == 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerBlackjack");
                 SoundEngine.PlaySound(SoundID.Meowmere);
                 Payout("Blackjack");
                 isGameActive = false;
+                dealerTurn = false;
                 StartDealerFlip();
             }
             else if (dealerCards.Count == 2 && dealerHandValue == 21)
@@ -395,6 +397,7 @@ namespace Blackjack.Common.UI
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBlackjack");
                 Payout("Lose");
                 isGameActive = false;
+                dealerTurn = false;
                 StartDealerFlip();
             }
         }
