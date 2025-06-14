@@ -6,12 +6,35 @@ Items: {
 }
 
 Configs: {
-	UIScale: {
-		DisplayName: UI Scale
+	Appearance: {
+		DisplayName: Appearance
 
 		BlackjackUIScale: {
-			Label: Blackjack UI Scale
-			Tooltip: ""
+			Label: Blackjack Popup UI Scale
+			Tooltip: The overall scaling of the blackjack UI. Larger values result in more of the screen being taken up by the UI.
+		}
+
+		BlackjackCardScale: {
+			Label: Blackjack Card Scale
+			Tooltip: How large the cards and the card stack are.
 		}
 	}
+}
+
+UI: {
+	EmptyBetSlot: Place any form of currency or any metal bar in this slot to bet.
+	DisabledClose: Finish the current game to close the window!
+	Play: Play!
+	Hit: Hit!
+	Stand: Stand!
+	PlayerWin: You win!
+	PlayerBlackjack: Blackjack! You win!
+	DealerWin: You lose...
+	DealerBlackjack: Dealer Blackjack. You lose...
+	PushBlackjack: Push! Player and Dealer tied Blackjack.
+	Push: Push! It's a tie.
+	PlayerBust: Bust! You lose.
+	DealerBust: Dealer busted! You win!
+	PlayerHand: Your hand:
+	DealerHand: Dealer's hand:
 }

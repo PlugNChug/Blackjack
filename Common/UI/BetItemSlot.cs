@@ -1,14 +1,16 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using ReLogic.Graphics;
+using System;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
-using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
+using Terraria.Localization;
 
 namespace Blackjack.Common.UI
 {
@@ -60,7 +62,8 @@ namespace Blackjack.Common.UI
                     Item temp = item.Clone();
                     item = Main.mouseItem.Clone();
                     Main.mouseItem = temp;
-                    SoundEngine.PlaySound(SoundID.Grab);
+                    if (!Main.mouseItem.IsAir && !item.IsAir)
+                        SoundEngine.PlaySound(SoundID.Grab);
                 }
             }
         }
@@ -80,9 +83,11 @@ namespace Blackjack.Common.UI
             spriteBatch.Draw(itemSlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.White);
             if (!item.IsAir)
             {
+                // Get the texture for the item
                 Main.instance.LoadItem(item.type);
                 Texture2D itemTexture = TextureAssets.Item[item.type].Value;
 
+                // Calculate the scale (prevents distortion)
                 float targetWidth = dims.Width / 2f;
                 float targetHeight = dims.Height / 2f;
                 float scale = Math.Min(targetWidth / itemTexture.Width, targetHeight / itemTexture.Height);
@@ -91,15 +96,26 @@ namespace Blackjack.Common.UI
                 int drawHeight = (int)(itemTexture.Height * scale);
                 Rectangle drawRect = new Rectangle((int)(dims.X + dims.Width / 2f - drawWidth / 2f), (int)(dims.Y + dims.Height / 2f - drawHeight / 2f), drawWidth, drawHeight);
 
+                // Draw the item with PointClamp sampling (prevents blurring)
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
                 spriteBatch.Draw(itemTexture, drawRect, Color.White);
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+
+                // Draw the item count
+                DynamicSpriteFont font = FontAssets.ItemStack.Value;
+                string stack = item.stack.ToString();
+                spriteBatch.DrawString(font, stack, new Vector2(dims.X + dims.Width / 2 - font.MeasureString(stack).X / 2, dims.Y + dims.Height - 30f), Color.White);
             }
             else
             {
                 spriteBatch.Draw(emptySlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.White);
+            }
+
+            if (IsMouseHovering && item.IsAir)
+            {
+                Main.hoverItemName = Language.GetTextValue("Mods.Blackjack.UI.EmptyBetSlot");
             }
         }
     }
