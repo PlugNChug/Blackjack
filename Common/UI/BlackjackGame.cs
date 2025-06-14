@@ -582,8 +582,8 @@ namespace Blackjack.Common.UI
 
             // Render game status text centered on the panel
             Vector2 statusSize = fontBig.MeasureString(gameStatus);
-            float panelLeft = position.X + dims.Width / 2f - statusSize.X / 2f - 20f;
-            float panelTop = position.Y + dims.Height / 2f - statusSize.Y / 2f - 10f;
+            float panelLeft = dims.Width / 2f - statusSize.X / 2f - 20f;
+            float panelTop = dims.Height / 2f - statusSize.Y / 2f - 10f;
             statusPanel.Left.Set(panelLeft, 0f);
             statusPanel.Top.Set(panelTop, 0f);
             statusPanel.Width.Set(statusSize.X + 40f, 0f);
