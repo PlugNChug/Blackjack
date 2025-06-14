@@ -318,6 +318,6 @@ namespace Blackjack.Common.UI
             base.OnDeactivate();
         }
 
-        
+
     }
 }

@@ -359,34 +359,25 @@ namespace Blackjack.Common.UI
             betSlot.EnableInteract();
         }
 
-        private void OverstackHelper(Item item)
+        private static void OverstackHelper(Item item)
         {
             while (item.stack > item.maxStack)
             {
-                if (item.stack - item.maxStack > item.maxStack)
-                {
-                    Item.NewItem(item.GetSource_Misc("Blackjack"), Main.LocalPlayer.position, item.type, item.maxStack);
-                    item.stack -= item.maxStack;
-                }
-                else
-                {
-                    Item.NewItem(item.GetSource_Misc("Blackjack"), Main.LocalPlayer.position, item.type, item.stack - item.maxStack);
-                    item.stack = item.maxStack;
-                }
+                int toDrop = Math.Min(item.stack - item.maxStack, item.maxStack);
+                Item.NewItem(item.GetSource_Misc("Blackjack"), Main.LocalPlayer.position, item.type, toDrop);
+                item.stack -= toDrop;
             }
-
         }
 
         private void DetermineWinner()
         {
             // Compare hand values and announce the result
             StartDealerFlip();
-            int betValue = BetItem?.value ?? 0;
             if (dealerHandValue > 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBust");
                 Payout("Win");
-            }    
+            }
             else if (playerHandValue > dealerHandValue)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerWin");
