@@ -82,21 +82,22 @@ namespace Blackjack.Common.UI
             // Betting item slot
             float betItemSlotSize = 88f;
             betItemSlot = new BetItemSlot(blackjackGame.BetItem, ItemSlot.Context.BankItem, betItemSlotSize);
-            SetRectangle(betItemSlot, left: 20f, top: boxHeight - 108f, width: betItemSlotSize, height: betItemSlotSize);
+            float bottomOffset = Math.Max(108f * uiScale, 108f);
+            SetRectangle(betItemSlot, left: 20f, top: boxHeight - bottomOffset, width: betItemSlotSize, height: betItemSlotSize);
             blackjackGame.SetBetItemSlot(betItemSlot);
             BlackjackPanel.Append(betItemSlot);
 
             // Play button
             Asset<Texture2D> buttonPlayTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonPlay");
             playButton = new UIHoverImageButton(buttonPlayTexture, "Mods.Blackjack.UI.Play");
-            SetRectangle(playButton, left: boxWidth - 108f, top: boxHeight - 108f, width: 88f, height: 88f);
+            SetRectangle(playButton, left: boxWidth - 108f, top: boxHeight - bottomOffset, width: 88f, height: 88f);
             playButton.OnLeftClick += new MouseEvent(PlayButtonClicked);
             // BlackjackPanel.Append(playButton); // By default, the play button is hidden until the player places a bet
 
             // Hit button
             Asset<Texture2D> buttonHitTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonHit");
             hitButton = new UIHoverImageButton(buttonHitTexture, "Mods.Blackjack.UI.Hit");
-            SetRectangle(hitButton, left: boxWidth / 2 - 96f, top: boxHeight - 108f, width: 88f, height: 88f);
+            SetRectangle(hitButton, left: boxWidth / 2 - 96f, top: boxHeight - bottomOffset, width: 88f, height: 88f);
             hitButton.OnLeftClick += (evt, element) =>
             {
                 if (blackjackGame.IsAnimating)
@@ -108,7 +109,7 @@ namespace Blackjack.Common.UI
             // Stand button
             Asset<Texture2D> buttonStandTexture = ModContent.Request<Texture2D>("Blackjack/Assets/ButtonStand");
             standButton = new UIHoverImageButton(buttonStandTexture, "Mods.Blackjack.UI.Stand");
-            SetRectangle(standButton, left: boxWidth / 2 + 8f, top: boxHeight - 108f, width: 88f, height: 88f);
+            SetRectangle(standButton, left: boxWidth / 2 + 8f, top: boxHeight - bottomOffset, width: 88f, height: 88f);
             standButton.OnLeftClick += (evt, element) =>
             {
                 if (blackjackGame.IsAnimating)
@@ -155,11 +156,13 @@ namespace Blackjack.Common.UI
             SetRectangle(blackjackGame, 0f, 50f, boxWidth, boxHeight - 50f);
 
             float betItemSlotSize = betItemSlot.Width.Pixels;
-            SetRectangle(betItemSlot, 20f, boxHeight - 108f, betItemSlotSize, betItemSlotSize);
+            float bottomOffset = Math.Max(108f * uiScale, 108f);
+            SetRectangle(betItemSlot, 20f, boxHeight - bottomOffset, betItemSlotSize, betItemSlotSize);
 
-            SetRectangle(playButton, boxWidth - 108f, boxHeight - 108f, 88f, 88f);
-            SetRectangle(hitButton, boxWidth / 2 - 96f, boxHeight - 108f, 88f, 88f);
-            SetRectangle(standButton, boxWidth / 2 + 8f, boxHeight - 108f, 88f, 88f);
+            Main.NewText(boxHeight - bottomOffset);
+            SetRectangle(playButton, boxWidth - 108f, boxHeight - bottomOffset, 88f, 88f);
+            SetRectangle(hitButton, boxWidth / 2 - 96f, boxHeight - bottomOffset, 88f, 88f);
+            SetRectangle(standButton, boxWidth / 2 + 8f, boxHeight - bottomOffset, 88f, 88f);
 
             blackjackGame.ApplyScale(uiScale);
         }
