@@ -209,12 +209,6 @@ namespace Blackjack.Common.UI
                 cardList[k] = temp;
             }
 
-            // Debug preset cards for testing
-            cardList[0] = 0;
-            cardList[1] = 13;
-            cardList[2] = 12;
-            cardList[3] = 25;
-
             // Reset card index
             cardIndex = 0;
         }
