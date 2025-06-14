@@ -349,14 +349,14 @@ namespace Blackjack.Common.UI
             int totalCards = (toPlayer ? playerCards.Count : dealerCards.Count) + 1;
             float average = (1 + totalCards) / 2f;
             float x = centerX - ((cardIndexInHand + 1 - average) * 150) - (cardWidth / 2f);
-            float y = dims.Y + (toPlayer ? 400 : 80);
+            float y = dims.Y + (toPlayer ? 400 * uiScale : 80 * uiScale);
             return new Vector2(x, y);
         }
 
         private void QueueDealCard(int cardIndex, bool toPlayer, Vector2 endPos)
         {
             CalculatedStyle dims = GetDimensions();
-            Vector2 start = new Vector2(dims.X + dims.Width - 100, dims.Y + 250);
+            Vector2 start = new Vector2(dims.X + dims.Width - (100 * uiScale), dims.Y + (250 * uiScale));
             Vector2 finalPos = endPos;
 
             dealingQueue.Enqueue(new DealingCard
@@ -407,8 +407,8 @@ namespace Blackjack.Common.UI
                 spriteBatch.DrawString(font, playerStatus2, dims.Position() + new Vector2(20, 370) * uiScale, Color.Yellow);
             }
 
-            float cardWidth = 90 * uiScale;
-            float cardHeight = 128 * uiScale;
+            int cardWidth = (int)(90 * uiScale);
+            int cardHeight = (int)(128 * uiScale);
 
             // Render player cards
             for (int i = 0; i < playerCards.Count; i++)
@@ -420,7 +420,7 @@ namespace Blackjack.Common.UI
                 // The rectangle to draw the card in
                 // To be able to position these cards in the center, divide the card count by 2 and place accordingly
                 float average = (1 + playerCards.Count) / 2f;
-                Rectangle cardRectangle = new Rectangle((int)(centerX - ((i + 1 - average) * 150) - (cardWidth / 2)), (int)dims.Y + 400, (int)cardWidth, (int)cardHeight);
+                Rectangle cardRectangle = new Rectangle((int)(centerX - ((i + 1 - average) * 150) - (cardWidth / 2)), (int)(dims.Y + 400 * uiScale), cardWidth, cardHeight);
 
                 spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
             }
@@ -462,12 +462,12 @@ namespace Blackjack.Common.UI
 
                     int width = (int)(cardWidth * MathHelper.Clamp(scale, 0f, 1f));
                     int x = baseX + ((int)cardWidth - width) / 2;
-                    cardRectangle = new Rectangle(x, (int)position.Y + 80, width, (int)cardHeight);
+                    cardRectangle = new Rectangle(x, (int)(position.Y + 80 * uiScale), width, cardHeight);
                 }
                 else
                 {
                     cardTexture = cardFrontAsset.Value;
-                    cardRectangle = new Rectangle(baseX, (int)position.Y + 80, (int)cardWidth, (int)cardHeight);
+                    cardRectangle = new Rectangle(baseX, (int)(position.Y + 80 * uiScale), cardWidth, cardHeight);
                 }
 
                 spriteBatch.Draw(cardTexture, cardRectangle, Color.White);
@@ -483,13 +483,13 @@ namespace Blackjack.Common.UI
                     currentDealingCard.Progress
                 );
                 Asset<Texture2D> cardFrontAsset = ModContent.Request<Texture2D>($"Blackjack/Assets/Cards/card_back");
-                Rectangle cardRectangle = new Rectangle((int)pos.X, (int)pos.Y, 90, 128);
+                Rectangle cardRectangle = new Rectangle((int)pos.X, (int)pos.Y, cardWidth, cardHeight);
                 spriteBatch.Draw(cardFrontAsset.Value, cardRectangle, Color.White);
             }
 
             // Draw the card stack
             Asset<Texture2D> cardStackAsset = ModContent.Request<Texture2D>("Blackjack/Assets/Cards/card_stack");
-            Rectangle stackRectangle = new Rectangle((int)position.X + (int)dims.Width - 120, (int)position.Y + 250, 90, 135);
+            Rectangle stackRectangle = new Rectangle((int)position.X + (int)dims.Width - 120, (int)(position.Y + 250 * uiScale), cardWidth, (int)(135 * uiScale));
             spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
 
             // Render game status text

@@ -38,7 +38,7 @@ namespace Blackjack.Common.UI
             BlackjackPanel = new DraggableUIPanel();
             BlackjackPanel.SetPadding(0);
 
-            float uiScale = 0.8f;
+            float uiScale = 0.6f;
             float boxWidth = 1280f * uiScale;
             float boxHeight = 720f * uiScale;
 
