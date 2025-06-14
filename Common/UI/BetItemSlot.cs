@@ -21,16 +21,20 @@ namespace Blackjack.Common.UI
         private readonly int context;
         private bool interactable = true;
         private static readonly HashSet<int> ValidBarItems = new();
+        private static bool barListInitialized;
 
-        static BetItemSlot()
+        // Build the set of valid bar items on demand, after all mods finish loading
+        private static void EnsureValidBarList()
         {
-            // Populate the valid bar set dynamically so that every vanilla bar and
-            // any modded bar using the MetalBars tile is automatically included.
+            if (barListInitialized)
+                return;
+
+            barListInitialized = true;
+            ValidBarItems.Clear();
+
             for (int i = 1; i < ItemLoader.ItemCount; i++)
             {
-                Item sample = new Item();
-                sample.SetDefaults(i);
-
+                Item sample = ContentSamples.ItemsByType[i];
                 bool nameMatches = Lang.GetItemNameValue(i).Contains("Bar", StringComparison.OrdinalIgnoreCase);
                 if (sample.createTile == TileID.MetalBars || nameMatches)
                 {
@@ -89,6 +93,7 @@ namespace Blackjack.Common.UI
 
         public static bool IsValidBetItem(Item check)
         {
+            EnsureValidBarList();
             return ValidBarItems.Contains(check.type);
         }
 
