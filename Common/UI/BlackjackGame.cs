@@ -12,6 +12,7 @@ using Terraria.UI;
 using Terraria;
 using Terraria.Localization;
 using Blackjack.Common.Config;
+using Terraria.GameContent.UI.Elements;
 
 namespace Blackjack.Common.UI
 {
@@ -90,18 +91,17 @@ namespace Blackjack.Common.UI
         private int dealerDrawDelayTimer = 0;  // Countdown before the next dealer draw
         private const int DealerDrawDelay = 60; // Frames of delay between dealer draws
 
-        // Game status text
-        DynamicSpriteFont font = FontAssets.ItemStack.Value;
-        DynamicSpriteFont fontBig = FontAssets.DeathText.Value;
-        string gameStatus = "";
-
+        // Game status text and panel
+        private DynamicSpriteFont font = FontAssets.ItemStack.Value;
+        private DynamicSpriteFont fontBig = FontAssets.DeathText.Value;
+        private string gameStatus = "";
         private UIPanel statusPanel;
 
         // Hand value text
-        string dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
-        string dealerStatus2;
-        string playerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.PlayerHand");
-        string playerStatus2;
+        private string dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
+        private string dealerStatus2;
+        private string playerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.PlayerHand");
+        private string playerStatus2;
 
 
         // Returns true if a game is currently in progress
@@ -124,7 +124,6 @@ namespace Blackjack.Common.UI
             statusPanel.BackgroundColor = Color.Black * 0.6f;
             statusPanel.BorderColor = Color.Black;
             statusPanel.SetPadding(0);
-            Append(statusPanel);
         }
 
         public void SetBetItemSlot(BetItemSlot slotObject)
@@ -435,15 +434,6 @@ namespace Blackjack.Common.UI
             CalculatedStyle dims = GetDimensions();
             Vector2 position = dims.Position();
 
-            Vector2 statusSize = fontBig.MeasureString(gameStatus);
-            float bgLeft = position.X + dims.Width / 2 - statusSize.X / 2 - 20f;
-            float bgTop = position.Y + dims.Height / 2 - 10f;
-            statusPanel.Left.Set(bgLeft, 0f);
-            statusPanel.Top.Set(bgTop, 0f);
-            statusPanel.Width.Set(statusSize.X + 40f, 0f);
-            statusPanel.Height.Set(statusSize.Y + 20f, 0f);
-            statusPanel.Recalculate();
-
             base.DrawSelf(spriteBatch);
 
             int centerX = (int)dims.Center().X;
@@ -559,9 +549,24 @@ namespace Blackjack.Common.UI
             spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
 
             // Render game status text centered on the panel
+            Vector2 statusSize = fontBig.MeasureString(gameStatus);
+            float panelLeft = position.X + dims.Width / 2 - statusSize.X / 2 - 20f;
+            float panelTop = position.Y + dims.Height / 2 - 10f;
+            statusPanel.Left.Set(panelLeft, 0f);
+            statusPanel.Top.Set(panelTop, 0f);
+            statusPanel.Width.Set(statusSize.X + 40f, 0f);
+            statusPanel.Height.Set(statusSize.Y + 20f, 0f);
+            statusPanel.Recalculate();
             Vector2 statusPos = new Vector2(position.X + dims.Width / 2 - statusSize.X / 2, position.Y + dims.Height / 2);
+            if (gameStatus.Length > 0)
+            {
+                Append(statusPanel);
+            }
+            else
+            {
+                RemoveChild(statusPanel);
+            }
             spriteBatch.DrawString(fontBig, gameStatus, statusPos, Color.White);
-
         }
 
         public override void Update(GameTime gameTime)
