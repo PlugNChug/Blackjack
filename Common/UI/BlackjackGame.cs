@@ -225,7 +225,7 @@ namespace Blackjack.Common.UI
                 return;
             }
 
-            if (dealerHandValue < 17 || (dealerHandValue == 17 && dealerCards.Exists(card => card % 13 == 0)))
+            if (dealerHandValue < 17 || (dealerHandValue == 17 && IsSoftHand(dealerCards)))
             {
                 if (cardIndex < cardList.Count)
                 {
@@ -338,6 +338,32 @@ namespace Blackjack.Common.UI
             }
 
             return value;
+        }
+
+        private bool IsSoftHand(List<int> hand)
+        {
+            // Determines if the provided hand's value counts any ace as 11
+            int minValue = 0;
+
+            foreach (int card in hand)
+            {
+                int rank = card % 13;
+                if (rank >= 10)
+                {
+                    minValue += 10;
+                }
+                else if (rank == 0)
+                {
+                    minValue += 1;
+                }
+                else
+                {
+                    minValue += rank + 1;
+                }
+            }
+
+            int bestValue = CalculateValue(hand);
+            return bestValue > minValue;
         }
 
         // Calculates the destination position for a card in a centered hand
