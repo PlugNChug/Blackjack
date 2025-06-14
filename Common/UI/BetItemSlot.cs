@@ -62,7 +62,7 @@ namespace Blackjack.Common.UI
                     Item temp = item.Clone();
                     item = Main.mouseItem.Clone();
                     Main.mouseItem = temp;
-                    if (!Main.mouseItem.IsAir && !item.IsAir)
+                    if (!Main.mouseItem.IsAir || !item.IsAir)
                         SoundEngine.PlaySound(SoundID.Grab);
                 }
             }
@@ -80,7 +80,14 @@ namespace Blackjack.Common.UI
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
             CalculatedStyle dims = GetDimensions();
-            spriteBatch.Draw(itemSlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.White);
+            if (interactable)
+            {
+                spriteBatch.Draw(itemSlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(itemSlotTexture.Value, new Rectangle((int)dims.X, (int)dims.Y, (int)dims.Width, (int)dims.Height), Color.Gray);
+            }
             if (!item.IsAir)
             {
                 // Get the texture for the item

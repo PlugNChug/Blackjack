@@ -90,12 +90,48 @@ namespace Blackjack.Common.UI
         private bool dealerTurn = false;       // True when the dealer is drawing
         private int dealerDrawDelayTimer = 0;  // Countdown before the next dealer draw
         private const int DealerDrawDelay = 60; // Frames of delay between dealer draws
+        private bool pendingDealerNatural = false; // Waits for dealer flip before payout
 
         // Game status text and panel
         private DynamicSpriteFont font = FontAssets.ItemStack.Value;
         private DynamicSpriteFont fontBig = FontAssets.DeathText.Value;
         private string gameStatus = "";
-        private UIPanel statusPanel;
+
+        private StatusPanel statusPanel;
+
+        // Small helper panel that draws the status text above itself
+        private class StatusPanel : UIPanel
+        {
+            private readonly DynamicSpriteFont _font;
+            private string _text = string.Empty;
+
+            public StatusPanel(DynamicSpriteFont font)
+            {
+                _font = font;
+                BackgroundColor = Color.Black * 0.6f;
+                BorderColor = Color.Black;
+                SetPadding(0);
+            }
+
+            public void SetText(string text)
+            {
+                _text = text;
+            }
+
+            protected override void DrawSelf(SpriteBatch spriteBatch)
+            {
+                base.DrawSelf(spriteBatch);
+                if (string.IsNullOrEmpty(_text))
+                    return;
+
+                CalculatedStyle dims = GetDimensions();
+                Vector2 size = _font.MeasureString(_text);
+                Vector2 pos = new Vector2(
+                    dims.X + dims.Width / 2f - size.X / 2f,
+                    dims.Y + dims.Height / 2f - size.Y / 2f);
+                spriteBatch.DrawString(_font, _text, pos, Color.White);
+            }
+        }
 
         // Hand value text
         private string dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
@@ -120,10 +156,7 @@ namespace Blackjack.Common.UI
                 cardList.Add(i);
             }
 
-            statusPanel = new UIPanel();
-            statusPanel.BackgroundColor = Color.Black * 0.6f;
-            statusPanel.BorderColor = Color.Black;
-            statusPanel.SetPadding(0);
+            statusPanel = new StatusPanel(fontBig);
         }
 
         public void SetBetItemSlot(BetItemSlot slotObject)
@@ -138,6 +171,7 @@ namespace Blackjack.Common.UI
                 player.QuickSpawnItem(player.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack);
                 betSlot.item.TurnToAir();
             }
+            betSlot.EnableInteract();
         }
 
         public void ResetGame()
@@ -156,12 +190,13 @@ namespace Blackjack.Common.UI
             dealerCardFlipProgress = 0f;
             gameStatus = string.Empty;
             WithdrawBetItem(Main.LocalPlayer);
-            dealerStatus2 = "...";
-            playerStatus2 = "...";
         }
 
         public void ShuffleCards()
         {
+            dealerStatus2 = "...";
+            playerStatus2 = "...";
+            betSlot.DisableInteract();
             // Randomly shuffle the deck before a new game starts
             Random rng = new Random();
             int n = cardList.Count;
@@ -262,6 +297,40 @@ namespace Blackjack.Common.UI
             }
         }
 
+        private void Payout(string outcome)
+        {
+            switch (outcome) {
+                case "Blackjack":
+                    // 3 to 2 payout
+                    betSlot.item.stack = betSlot.item.stack + (int) (betSlot.item.stack * 1.5f);
+                    if (betSlot.item.stack > 9999)
+                    {
+                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - 9999);
+                        betSlot.item.stack = 9999;
+                    }
+                    break;
+                case "Win":
+                    // 1 to 1 payout
+                    betSlot.item.stack = betSlot.item.stack * 2;
+                    if (betSlot.item.stack > 9999)
+                    {
+                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - 9999);
+                        betSlot.item.stack = 9999;
+                    }
+                    break;
+                case "Lose":
+                    // Lose the items
+                    betSlot.item.TurnToAir();
+                    break;
+                case "Push":
+                    // Nothing happens
+                    break;
+                default:
+                    break;
+            }
+            betSlot.EnableInteract();
+        }
+
         private void DetermineWinner()
         {
             // Compare hand values and announce the result
@@ -270,30 +339,24 @@ namespace Blackjack.Common.UI
             if (dealerHandValue > 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBust");
+                Payout("Win");
             }    
             else if (playerHandValue > dealerHandValue)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerWin");
+                Payout("Win");
             }
             else if (playerHandValue < dealerHandValue)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerWin");
+                Payout("Lose");
             }
             else
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.Push");
+                Payout("Push");
             }
             isGameActive = false;
-            WithdrawBetItem(Main.LocalPlayer);
-        }
-
-        private void StartDealerFlip()
-        {
-            // Begins the animation that reveals the dealer's hidden card
-            if (flippingDealerCard || dealerFirstCardRevealed)
-                return;
-            flippingDealerCard = true;
-            dealerCardFlipProgress = 0f;
         }
 
         private void CalculateHandValues()
@@ -309,24 +372,29 @@ namespace Blackjack.Common.UI
             if (playerCards.Count == 2 && dealerCards.Count == 2 && playerHandValue == 21 && dealerHandValue == 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PushBlackjack");
+                Payout("Push");
                 isGameActive = false;
+                dealerTurn = false;
                 StartDealerFlip();
             }
-            // Then, check for player natural
-            else if (playerCards.Count == 2 && playerHandValue == 21)
+            // Then, check for player natural - only evaluate once the dealer has received their second card
+            else if (playerCards.Count == 2 && dealerCards.Count >= 2 && playerHandValue == 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerBlackjack");
                 SoundEngine.PlaySound(SoundID.Meowmere);
+                Payout("Blackjack");
                 isGameActive = false;
+                dealerTurn = false;
                 StartDealerFlip();
-                WithdrawBetItem(Main.LocalPlayer);
             }
             else if (dealerCards.Count == 2 && dealerHandValue == 21)
             {
-                gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBlackjack");
-                isGameActive = false;
+                // Reveal the dealer's hidden card before resolving the round
                 StartDealerFlip();
-                WithdrawBetItem(Main.LocalPlayer);
+                gameStatus = Language.GetTextValue("Mods.Blackjack.UI.DealerBlackjack");
+                pendingDealerNatural = true;
+                isGameActive = false;
+                dealerTurn = false;
             }
         }
 
@@ -413,6 +481,15 @@ namespace Blackjack.Common.UI
             return cardHeight;
         }
 
+        private void StartDealerFlip()
+        {
+            // Begins the animation that reveals the dealer's hidden card
+            if (flippingDealerCard || dealerFirstCardRevealed)
+                return;
+            flippingDealerCard = true;
+            dealerCardFlipProgress = 0f;
+        }
+
         private void QueueDealCard(int cardIndex, bool toPlayer, Vector2 endPos)
         {
             CalculatedStyle dims = GetDimensions();
@@ -439,8 +516,7 @@ namespace Blackjack.Common.UI
             int centerX = (int)dims.Center().X;
 
             // Dealer hand value text. Should be rendered above the dealer's cards
-            string dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
-            string dealerStatus2;
+            dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
             if (isGameActive && !dealerFirstCardRevealed && dealerCards.Count > 1)
             {
                 dealerStatus2 = (dealerCards[1] % 13 >= 10 ? 10 : (dealerCards[1] % 13) + 1).ToString() + " + ???";
@@ -455,8 +531,9 @@ namespace Blackjack.Common.UI
             }
 
             // Player hand value text. Should be rendered above the player's cards
-            string playerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.PlayerHand");
-            string playerStatus2 = playerHandValue.ToString();
+            playerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.PlayerHand");
+            if (isGameActive && playerCards.Count > 0)
+                playerStatus2 = playerHandValue.ToString();
 
             if (isGameActive)
             {
@@ -550,23 +627,24 @@ namespace Blackjack.Common.UI
 
             // Render game status text centered on the panel
             Vector2 statusSize = fontBig.MeasureString(gameStatus);
-            float panelLeft = position.X + dims.Width / 2 - statusSize.X / 2 - 20f;
-            float panelTop = position.Y + dims.Height / 2 - 10f;
+            float panelLeft = dims.Width / 2f - statusSize.X / 2f - 20f;
+            float panelTop = dims.Height / 2f - statusSize.Y / 2f - 10f;
             statusPanel.Left.Set(panelLeft, 0f);
             statusPanel.Top.Set(panelTop, 0f);
             statusPanel.Width.Set(statusSize.X + 40f, 0f);
             statusPanel.Height.Set(statusSize.Y + 20f, 0f);
-            statusPanel.Recalculate();
-            Vector2 statusPos = new Vector2(position.X + dims.Width / 2 - statusSize.X / 2, position.Y + dims.Height / 2);
+            statusPanel.SetText(gameStatus);
+
             if (gameStatus.Length > 0)
             {
-                Append(statusPanel);
+                if (statusPanel.Parent != this)
+                    Append(statusPanel);
+                statusPanel.Recalculate();
             }
-            else
+            else if (statusPanel.Parent == this)
             {
                 RemoveChild(statusPanel);
             }
-            spriteBatch.DrawString(fontBig, gameStatus, statusPos, Color.White);
         }
 
         public override void Update(GameTime gameTime)
@@ -582,6 +660,12 @@ namespace Blackjack.Common.UI
                     flippingDealerCard = false;
                     dealerFirstCardRevealed = true;
                 }
+            }
+
+            if (pendingDealerNatural && !flippingDealerCard && dealerFirstCardRevealed)
+            {
+                Payout("Lose");
+                pendingDealerNatural = false;
             }
 
             if (currentDealingCard == null && dealingQueue.Count > 0)
@@ -609,9 +693,9 @@ namespace Blackjack.Common.UI
                         if (playerHandValue > 21)
                         {
                             gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerBust");
+                            Payout("Lose");
                             isGameActive = false;
                             StartDealerFlip();
-                            WithdrawBetItem(Main.LocalPlayer);
                         }
                         else if (playerHandValue == 21)
                         {
