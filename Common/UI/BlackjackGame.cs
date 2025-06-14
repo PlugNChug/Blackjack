@@ -58,6 +58,14 @@ namespace Blackjack.Common.UI
             stackHeight = (int)(cardWidth * 1.509f);
         }
 
+        public void ApplyScale(float scale)
+        {
+            uiScale = scale;
+            cardWidth = (int)(ModContent.GetInstance<Appearance>().BlackjackCardScale * uiScale);
+            cardHeight = (int)(cardWidth * 1.422f);
+            stackHeight = (int)(cardWidth * 1.509f);
+        }
+
         // Holds a numeric representation of a standard 52 card deck
         private List<int> cardList;
         // Tracks which card to draw next from the shuffled deck

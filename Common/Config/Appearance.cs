@@ -14,7 +14,6 @@ namespace Blackjack.Common.Config
         [Increment(.1f)]
         [DrawTicks]
         [DefaultValue(0.8f)]
-        [ReloadRequired]
         public float BlackjackUIScale;
 
         // Blackjack Card Scale
@@ -22,7 +21,6 @@ namespace Blackjack.Common.Config
         [Increment(5)]
         [DrawTicks]
         [DefaultValue(120)]
-        [ReloadRequired]
         public int BlackjackCardScale;
     }
 }
