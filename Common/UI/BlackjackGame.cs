@@ -345,7 +345,7 @@ namespace Blackjack.Common.UI
         {
             CalculatedStyle dims = GetDimensions();
             float centerX = dims.X + dims.Width / 2f;
-            int cardWidth = 90;
+            float cardWidth = 90 * uiScale;
             int totalCards = (toPlayer ? playerCards.Count : dealerCards.Count) + 1;
             float average = (1 + totalCards) / 2f;
             float x = centerX - ((cardIndexInHand + 1 - average) * 150) - (cardWidth / 2f);
@@ -376,6 +376,8 @@ namespace Blackjack.Common.UI
             DynamicSpriteFont font = FontAssets.ItemStack.Value;
 
             CalculatedStyle dims = GetDimensions();
+            Vector2 position = dims.Position();
+            int centerX = (int)dims.Center().X;
 
             // Dealer hand value text. Should be rendered above the dealer's cards
             string dealerStatus1 = "Dealer's hand: ";
@@ -418,7 +420,7 @@ namespace Blackjack.Common.UI
                 // The rectangle to draw the card in
                 // To be able to position these cards in the center, divide the card count by 2 and place accordingly
                 float average = (1 + playerCards.Count) / 2f;
-                Rectangle cardRectangle = new Rectangle((int)(dims.Center().X - ((i + 1 - average) * 150) - (cardWidth / 2)), (int)dims.Y + 400, (int)cardWidth, (int)cardHeight);
+                Rectangle cardRectangle = new Rectangle((int)(centerX - ((i + 1 - average) * 150) - (cardWidth / 2)), (int)dims.Y + 400, (int)cardWidth, (int)cardHeight);
 
                 spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
             }
@@ -434,7 +436,7 @@ namespace Blackjack.Common.UI
                 Rectangle cardRectangle;
 
                 float dealerAverage = (1 + dealerCards.Count) / 2f;
-                int baseX = centerX - (int)((i + 1 - dealerAverage) * 150) - (cardWidth / 2);
+                int baseX = (int)(centerX - ((i + 1 - dealerAverage) * 150) - (cardWidth / 2));
 
                 if (i == 0 && (!dealerFirstCardRevealed || flippingDealerCard))
                 {
@@ -458,14 +460,14 @@ namespace Blackjack.Common.UI
                         scale = 1f;
                     }
 
-                    int width = (int)(90 * MathHelper.Clamp(scale, 0f, 1f));
-                    int x = baseX + (90 - width) / 2;
-                    cardRectangle = new Rectangle(x, (int)position.Y + 80, width, 128);
+                    int width = (int)(cardWidth * MathHelper.Clamp(scale, 0f, 1f));
+                    int x = baseX + ((int)cardWidth - width) / 2;
+                    cardRectangle = new Rectangle(x, (int)position.Y + 80, width, (int)cardHeight);
                 }
                 else
                 {
                     cardTexture = cardFrontAsset.Value;
-                    cardRectangle = new Rectangle(baseX, (int)position.Y + 80, cardWidth, 128);
+                    cardRectangle = new Rectangle(baseX, (int)position.Y + 80, (int)cardWidth, (int)cardHeight);
                 }
 
                 spriteBatch.Draw(cardTexture, cardRectangle, Color.White);
