@@ -11,7 +11,6 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using Terraria;
 using Terraria.Localization;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Blackjack.Common.Config;
 
 namespace Blackjack.Common.UI
@@ -96,74 +95,7 @@ namespace Blackjack.Common.UI
         DynamicSpriteFont fontBig = FontAssets.DeathText.Value;
         string gameStatus = "";
 
-        private static Texture2D pixel;
-
-        private static void EnsurePixel()
-        {
-            if (pixel == null)
-            {
-                pixel = new Texture2D(Main.graphics.GraphicsDevice, 1, 1);
-                pixel.SetData(new[] { Color.White });
-            }
-        }
-
-        private static void DrawRoundedRect(SpriteBatch spriteBatch, Rectangle rect, int radius, Color fillColor, Color borderColor, int borderThickness = 2)
-        {
-            EnsurePixel();
-
-            for (int y = 0; y < rect.Height; y++)
-            {
-                int xStart = 0;
-                int xEnd = rect.Width;
-                if (y < radius)
-                {
-                    int x = radius - (int)Math.Sqrt(radius * radius - y * y);
-                    xStart = radius - x;
-                    xEnd = rect.Width - (radius - x);
-                }
-                else if (y >= rect.Height - radius)
-                {
-                    int dy = y - (rect.Height - radius);
-                    int x = radius - (int)Math.Sqrt(radius * radius - dy * dy);
-                    xStart = radius - x;
-                    xEnd = rect.Width - (radius - x);
-                }
-                spriteBatch.Draw(pixel, new Rectangle(rect.X + xStart, rect.Y + y, xEnd - xStart, 1), fillColor);
-            }
-
-            for (int i = 0; i < borderThickness; i++)
-            {
-                Rectangle r = new Rectangle(rect.X + i, rect.Y + i, rect.Width - 2 * i, rect.Height - 2 * i);
-                for (int y = 0; y < r.Height; y++)
-                {
-                    int xStart = 0;
-                    int xEnd = r.Width;
-                    if (y < radius)
-                    {
-                        int x = radius - (int)Math.Sqrt(radius * radius - y * y);
-                        xStart = radius - x;
-                        xEnd = r.Width - (radius - x);
-                    }
-                    else if (y >= r.Height - radius)
-                    {
-                        int dy = y - (r.Height - radius);
-                        int x = radius - (int)Math.Sqrt(radius * radius - dy * dy);
-                        xStart = radius - x;
-                        xEnd = r.Width - (radius - x);
-                    }
-
-                    if (y < borderThickness || y >= r.Height - borderThickness)
-                    {
-                        spriteBatch.Draw(pixel, new Rectangle(r.X + xStart, r.Y + y, xEnd - xStart, 1), borderColor);
-                    }
-                    else
-                    {
-                        spriteBatch.Draw(pixel, new Rectangle(r.X + xStart, r.Y + y, 1, 1), borderColor);
-                        spriteBatch.Draw(pixel, new Rectangle(r.X + xEnd - 1, r.Y + y, 1, 1), borderColor);
-                    }
-                }
-            }
-        }
+        private UIPanel statusPanel;
 
         // Hand value text
         string dealerStatus1 = Language.GetTextValue("Mods.Blackjack.UI.DealerHand");
@@ -187,6 +119,12 @@ namespace Blackjack.Common.UI
             {
                 cardList.Add(i);
             }
+
+            statusPanel = new UIPanel();
+            statusPanel.BackgroundColor = Color.Black * 0.6f;
+            statusPanel.BorderColor = Color.Black;
+            statusPanel.SetPadding(0);
+            Append(statusPanel);
         }
 
         public void SetBetItemSlot(BetItemSlot slotObject)
@@ -494,10 +432,20 @@ namespace Blackjack.Common.UI
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            base.DrawSelf(spriteBatch);
-
             CalculatedStyle dims = GetDimensions();
             Vector2 position = dims.Position();
+
+            Vector2 statusSize = fontBig.MeasureString(gameStatus);
+            float bgLeft = position.X + dims.Width / 2 - statusSize.X / 2 - 20f;
+            float bgTop = position.Y + dims.Height / 2 - 10f;
+            statusPanel.Left.Set(bgLeft, 0f);
+            statusPanel.Top.Set(bgTop, 0f);
+            statusPanel.Width.Set(statusSize.X + 40f, 0f);
+            statusPanel.Height.Set(statusSize.Y + 20f, 0f);
+            statusPanel.Recalculate();
+
+            base.DrawSelf(spriteBatch);
+
             int centerX = (int)dims.Center().X;
 
             // Dealer hand value text. Should be rendered above the dealer's cards
@@ -610,11 +558,8 @@ namespace Blackjack.Common.UI
             Rectangle stackRectangle = new Rectangle((int)(position.X + dims.Width - cardWidth - 20), (int)(position.Y + dims.Height / 2 - stackHeight / 2), cardWidth, stackHeight);
             spriteBatch.Draw(cardStackAsset.Value, stackRectangle, Color.White);
 
-            // Render game status text with background
-            Vector2 statusSize = fontBig.MeasureString(gameStatus);
+            // Render game status text centered on the panel
             Vector2 statusPos = new Vector2(position.X + dims.Width / 2 - statusSize.X / 2, position.Y + dims.Height / 2);
-            Rectangle bgRect = new Rectangle((int)(statusPos.X - 20), (int)(statusPos.Y - 10), (int)statusSize.X + 40, (int)statusSize.Y + 20);
-            DrawRoundedRect(spriteBatch, bgRect, 8, Color.Black * 0.6f, Color.Black, 2);
             spriteBatch.DrawString(fontBig, gameStatus, statusPos, Color.White);
 
         }
