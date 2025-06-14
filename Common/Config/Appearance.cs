@@ -10,7 +10,7 @@ namespace Blackjack.Common.Config
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
         // Overall UI Scale
-        [Range(0.6f, 1.5f)]
+        [Range(0.6f, 1.4f)]
         [Increment(.1f)]
         [DrawTicks]
         [DefaultValue(0.8f)]

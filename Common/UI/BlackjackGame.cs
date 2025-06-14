@@ -311,19 +311,19 @@ namespace Blackjack.Common.UI
                 case "Blackjack":
                     // 3 to 2 payout
                     betSlot.item.stack = betSlot.item.stack + (int) (betSlot.item.stack * 1.5f);
-                    if (betSlot.item.stack > 9999)
+                    if (betSlot.item.stack > betSlot.item.maxStack)
                     {
-                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - 9999);
-                        betSlot.item.stack = 9999;
+                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - betSlot.item.maxStack);
+                        betSlot.item.stack = betSlot.item.maxStack;
                     }
                     break;
                 case "Win":
                     // 1 to 1 payout
                     betSlot.item.stack = betSlot.item.stack * 2;
-                    if (betSlot.item.stack > 9999)
+                    if (betSlot.item.stack > betSlot.item.maxStack)
                     {
-                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - 9999);
-                        betSlot.item.stack = 9999;
+                        Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_Misc("Blackjack"), betSlot.item.type, betSlot.item.stack - betSlot.item.maxStack);
+                        betSlot.item.stack = betSlot.item.maxStack;
                     }
                     break;
                 case "Lose":
@@ -561,7 +561,7 @@ namespace Blackjack.Common.UI
                 // The rectangle to draw the card in
                 // To be able to position these cards in the center, divide the card count by 2 and place accordingly
                 float average = (1 + playerCards.Count) / 2f;
-                Rectangle cardRectangle = new Rectangle((int)(centerX - ((i + 1 - average) * 150) - (cardWidth / 2)), (int)(dims.Y + 340 * uiScale), cardWidth, cardHeight);
+                Rectangle cardRectangle = new Rectangle((int)(centerX - ((i + 1 - average) * 150 * uiScale) - (cardWidth / 2)), (int)(dims.Y + 340 * uiScale), cardWidth, cardHeight);
 
                 spriteBatch.Draw(cardTextureAsset.Value, cardRectangle, Color.White);
             }
@@ -577,7 +577,7 @@ namespace Blackjack.Common.UI
                 Rectangle cardRectangle;
 
                 float dealerAverage = (1 + dealerCards.Count) / 2f;
-                int baseX = (int)(centerX - ((i + 1 - dealerAverage) * 150) - (cardWidth / 2));
+                int baseX = (int)(centerX - ((i + 1 - dealerAverage) * 150 * uiScale) - (cardWidth / 2));
 
                 if (i == 0 && (!dealerFirstCardRevealed || flippingDealerCard))
                 {

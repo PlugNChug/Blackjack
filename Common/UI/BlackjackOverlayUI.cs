@@ -82,7 +82,7 @@ namespace Blackjack.Common.UI
             // Betting item slot
             float betItemSlotSize = 88f;
             betItemSlot = new BetItemSlot(blackjackGame.BetItem, ItemSlot.Context.BankItem, betItemSlotSize);
-            float bottomOffset = 108f * uiScale;
+            float bottomOffset = Math.Max(108f * uiScale, 108f);
             SetRectangle(betItemSlot, left: 20f, top: boxHeight - bottomOffset, width: betItemSlotSize, height: betItemSlotSize);
             blackjackGame.SetBetItemSlot(betItemSlot);
             BlackjackPanel.Append(betItemSlot);
@@ -156,9 +156,10 @@ namespace Blackjack.Common.UI
             SetRectangle(blackjackGame, 0f, 50f, boxWidth, boxHeight - 50f);
 
             float betItemSlotSize = betItemSlot.Width.Pixels;
-            float bottomOffset = 108f * uiScale;
+            float bottomOffset = Math.Max(108f * uiScale, 108f);
             SetRectangle(betItemSlot, 20f, boxHeight - bottomOffset, betItemSlotSize, betItemSlotSize);
 
+            Main.NewText(boxHeight - bottomOffset);
             SetRectangle(playButton, boxWidth - 108f, boxHeight - bottomOffset, 88f, 88f);
             SetRectangle(hitButton, boxWidth / 2 - 96f, boxHeight - bottomOffset, 88f, 88f);
             SetRectangle(standButton, boxWidth / 2 + 8f, boxHeight - bottomOffset, 88f, 88f);
