@@ -63,12 +63,13 @@ namespace Blackjack.Common.UI
             {
                 rightMouseDownTimer--;
             }
-            else
+            else if (rightMouseDownTimer == 0)
             {
                 rightMouseDownTimer = -1;
                 rightMouseDownStage2 = true;
             }
 
+            if (rightMouseDownStage2) RightMouseHold();
         }
 
         public void DisableInteract()
@@ -87,8 +88,16 @@ namespace Blackjack.Common.UI
 
             if (interactable)
             {
-                // Check if the item is a currency or bar
-                if (Main.mouseItem.IsCurrency || EnsureValidItem(Main.mouseItem) || Main.mouseItem.IsAir)
+                // Emulating the behavior of the vanilla item slot
+                if (Main.mouseItem.type == item.type && item.stack < item.maxStack)
+                {
+                    int toAdd = Math.Min(item.maxStack - item.stack, Main.mouseItem.stack);
+                    Main.mouseItem.stack -= toAdd;
+                    item.stack += toAdd;
+                    SoundEngine.PlaySound(SoundID.Grab);
+                }
+                // Check if the item valid
+                else if (Main.mouseItem.IsCurrency || EnsureValidItem(Main.mouseItem) || Main.mouseItem.IsAir)
                 {
                     Item temp = item.Clone();
                     item = Main.mouseItem.Clone();
@@ -108,24 +117,9 @@ namespace Blackjack.Common.UI
                 // Holding right click will accelerate the process of taking an item.
                 if (rightMouseDownStage1)
                 {
+                    RightMouseHold();
                     // Changing this to false will trigger a timer in Update()
                     rightMouseDownStage1 = false;
-                }
-
-                // Right clicking an item with an empty mouse will take one of that item.
-                if (!item.IsAir)
-                {
-                    if (Main.mouseItem.IsAir)
-                    {
-                        Main.mouseItem = item.Clone();
-                        Main.mouseItem.stack = 1;
-                        item.stack -= 1;
-                    }
-                    else if (Main.mouseItem.type == item.type && Main.mouseItem.stack < Main.mouseItem.maxStack)
-                    {
-                        Main.mouseItem.stack += 1;
-                        item.stack -= 1;
-                    }
                 }
             }
         }
@@ -137,6 +131,26 @@ namespace Blackjack.Common.UI
             rightMouseDownStage1 = true;
             rightMouseDownStage2 = false;
             rightMouseDownTimer = -1;
+        }
+
+        public void RightMouseHold()
+        {
+            // Right clicking an item with an empty mouse will take one of that item.
+            if (!item.IsAir)
+            {
+                if (Main.mouseItem.IsAir)
+                {
+                    Main.mouseItem = item.Clone();
+                    Main.mouseItem.stack = 1;
+                    item.stack -= 1;
+                }
+                else if (Main.mouseItem.type == item.type && Main.mouseItem.stack < Main.mouseItem.maxStack)
+                {
+                    Main.mouseItem.stack += 1;
+                    item.stack -= 1;
+                }
+                SoundEngine.PlaySound(SoundID.Grab);
+            }
         }
 
         // Draw the slot with built-in ItemSlot logic

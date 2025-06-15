@@ -338,20 +338,24 @@ namespace Blackjack.Common.UI
             switch (outcome) {
                 case "Blackjack":
                     // 3 to 2 payout
+                    SoundEngine.PlaySound(SoundID.Meowmere);
                     betSlot.item.stack = betSlot.item.stack + (int) (betSlot.item.stack * 1.5f);
                     OverstackHelper(betSlot.item);
                     break;
                 case "Win":
                     // 1 to 1 payout
+                    SoundEngine.PlaySound(SoundID.Item4);
                     betSlot.item.stack = betSlot.item.stack * 2;
                     OverstackHelper(betSlot.item);
                     break;
                 case "Lose":
                     // Lose the items
+                    SoundEngine.PlaySound(SoundID.Item16);
                     betSlot.item.TurnToAir();
                     break;
                 case "Push":
                     // Nothing happens
+                    SoundEngine.PlaySound(SoundID.Item141);
                     break;
                 default:
                     break;
@@ -418,7 +422,6 @@ namespace Blackjack.Common.UI
             else if (playerCards.Count == 2 && dealerCards.Count >= 2 && playerHandValue == 21)
             {
                 gameStatus = Language.GetTextValue("Mods.Blackjack.UI.PlayerBlackjack");
-                SoundEngine.PlaySound(SoundID.Meowmere);
                 Payout("Blackjack");
                 isGameActive = false;
                 dealerTurn = false;
