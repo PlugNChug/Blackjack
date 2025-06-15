@@ -5,9 +5,9 @@ Items: {
 			Opens the Blackjack UI.
 			[c/FFFFAA:Place any stackable item in the bet slot to place a bet.]
 			[c/FFFFAA:The game cannot start without a bet.]
-			Winning will return [c/AAFFAA:double] the bet item's stack,
-			and getting a blackjack will return [c/22FF22:2.5x] the item's stack.
-			Losing will [c/FFFF22:delete] the bet items.
+			Winning will return [c/AAFFAA:double] the bet item's stack.
+			Getting a blackjack will return [c/22FF22:2.5x] the item's stack.
+			Losing will [c/FF8822:delete] the bet item(s).
 			The deck is reset after each game.
 			[c/FF2222:WARNING: Exiting the world while items are in the bet slot will cause them to be lost.]
 			'''
@@ -26,7 +26,7 @@ Configs: {
 
 		BlackjackCardScale: {
 			Label: Blackjack Card Scale
-			Tooltip: How large the cards and the card stack are. The number signifies the width in pixels of each card and the card stack with 1.0x scaling.
+			Tooltip: How large the cards and the card stack are. The number signifies the width in pixels of each card and the card stack with 1.0x scaling. (May be capped by the Blackjack Popup UI Scale setting)
 		}
 	}
 }
