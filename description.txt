@@ -1,7 +1,7 @@
 A custom UI that allows you to gamble in-game items.
 It comes with an interactable item slot to place bets, animated cards, and action buttons!
 
-Craft a Giant Blackjack Chip with 20 clay ([i/s20:133]) and a black dye ([i:1050]) to access the Blackjack UI.
+Craft a Giant Blackjack Chip with 20 clay ([i/s20:133]) and a black dye ([i:1050]) at a workbench to access the Blackjack UI.
 You can bet ANY stackable item, which includes:
 - Coins
 - Metal Bars
