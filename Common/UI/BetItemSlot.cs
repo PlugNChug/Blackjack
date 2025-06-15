@@ -157,19 +157,30 @@ namespace Blackjack.Common.UI
                 Main.instance.LoadItem(item.type);
                 Texture2D itemTexture = TextureAssets.Item[item.type].Value;
 
+                Rectangle sourceRect = itemTexture.Bounds;
+                if (Main.itemAnimations[item.type] != null)
+                {
+                    var anim = Main.itemAnimations[item.type];
+                    int frameCount = anim.FrameCount;
+                    int ticksPerFrame = anim.TicksPerFrame;
+                    int frame = (int)(Main.GameUpdateCount / (uint)ticksPerFrame % frameCount);
+                    int frameHeight = itemTexture.Height / frameCount;
+                    sourceRect = new Rectangle(0, frameHeight * frame, itemTexture.Width, frameHeight);
+                }
+
                 // Calculate the scale (prevents distortion)
                 float targetWidth = dims.Width / 2f;
                 float targetHeight = dims.Height / 2f;
-                float scale = Math.Min(targetWidth / itemTexture.Width, targetHeight / itemTexture.Height);
+                float scale = Math.Min(targetWidth / sourceRect.Width, targetHeight / sourceRect.Height);
 
-                int drawWidth = (int)(itemTexture.Width * scale);
-                int drawHeight = (int)(itemTexture.Height * scale);
+                int drawWidth = (int)(sourceRect.Width * scale);
+                int drawHeight = (int)(sourceRect.Height * scale);
                 Rectangle drawRect = new Rectangle((int)(dims.X + dims.Width / 2f - drawWidth / 2f), (int)(dims.Y + dims.Height / 2f - drawHeight / 2f), drawWidth, drawHeight);
 
                 // Draw the item with PointClamp sampling (prevents blurring)
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
-                spriteBatch.Draw(itemTexture, drawRect, Color.White);
+                spriteBatch.Draw(itemTexture, drawRect, sourceRect, Color.White);
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
 
