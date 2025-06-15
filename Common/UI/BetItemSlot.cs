@@ -23,24 +23,15 @@ namespace Blackjack.Common.UI
         private static readonly HashSet<int> ValidBarItems = new();
         private static bool barListInitialized;
 
+        private bool rightMouseDownStage1 = true;
+        private bool rightMouseDownStage2 = false;
+        private int rightMouseDownTimer = -1;
+
         // Build the set of valid bar items on demand, after all mods finish loading
-        private static void EnsureValidBarList()
+        private static bool EnsureValidItem(Item item)
         {
-            if (barListInitialized)
-                return;
-
-            barListInitialized = true;
-            ValidBarItems.Clear();
-
-            for (int i = 1; i < ItemLoader.ItemCount; i++)
-            {
-                Item sample = ContentSamples.ItemsByType[i];
-                bool nameMatches = Lang.GetItemNameValue(i).Contains("Bar", StringComparison.OrdinalIgnoreCase);
-                if (sample.createTile == TileID.MetalBars || nameMatches)
-                {
-                    ValidBarItems.Add(i);
-                }
-            }
+            if (item.maxStack > 1) return true;
+            return false;
         }
 
         Asset<Texture2D> itemSlotTexture = ModContent.Request<Texture2D>($"Blackjack/Assets/CustomItemSlot");
@@ -61,6 +52,23 @@ namespace Blackjack.Common.UI
             {
                 Main.LocalPlayer.mouseInterface = true;
             }
+
+            // Right mouse hold handler
+            if (!rightMouseDownStage1 && rightMouseDownTimer == -1)
+            {
+                // 30 frames
+                rightMouseDownTimer = 30;
+            }
+            else if (rightMouseDownTimer > 0)
+            {
+                rightMouseDownTimer--;
+            }
+            else
+            {
+                rightMouseDownTimer = -1;
+                rightMouseDownStage2 = true;
+            }
+
         }
 
         public void DisableInteract()
@@ -77,10 +85,10 @@ namespace Blackjack.Common.UI
         {
             base.LeftClick(evt);
 
-            // Then check if the item is a currency, ore, bar, or gem
             if (interactable)
             {
-                if (Main.mouseItem.IsCurrency || IsValidBetItem(Main.mouseItem) || Main.mouseItem.IsAir)
+                // Check if the item is a currency or bar
+                if (Main.mouseItem.IsCurrency || EnsureValidItem(Main.mouseItem) || Main.mouseItem.IsAir)
                 {
                     Item temp = item.Clone();
                     item = Main.mouseItem.Clone();
@@ -91,10 +99,44 @@ namespace Blackjack.Common.UI
             }
         }
 
-        public static bool IsValidBetItem(Item check)
+        public override void RightMouseDown(UIMouseEvent evt)
         {
-            EnsureValidBarList();
-            return ValidBarItems.Contains(check.type);
+            base.RightMouseDown(evt);
+
+            if (interactable && (rightMouseDownStage1 || rightMouseDownStage2))
+            {
+                // Holding right click will accelerate the process of taking an item.
+                if (rightMouseDownStage1)
+                {
+                    // Changing this to false will trigger a timer in Update()
+                    rightMouseDownStage1 = false;
+                }
+
+                // Right clicking an item with an empty mouse will take one of that item.
+                if (!item.IsAir)
+                {
+                    if (Main.mouseItem.IsAir)
+                    {
+                        Main.mouseItem = item.Clone();
+                        Main.mouseItem.stack = 1;
+                        item.stack -= 1;
+                    }
+                    else if (Main.mouseItem.type == item.type && Main.mouseItem.stack < Main.mouseItem.maxStack)
+                    {
+                        Main.mouseItem.stack += 1;
+                        item.stack -= 1;
+                    }
+                }
+            }
+        }
+
+        public override void RightMouseUp(UIMouseEvent evt)
+        {
+            base.RightMouseUp(evt);
+
+            rightMouseDownStage1 = true;
+            rightMouseDownStage2 = false;
+            rightMouseDownTimer = -1;
         }
 
         // Draw the slot with built-in ItemSlot logic
