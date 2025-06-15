@@ -1,4 +1,29 @@
-A custom UI that allows you to gamble in-game currencies and items.
+A custom UI that allows you to gamble in-game items.
+It comes with an interactable item slot to place bets, animated cards, and action buttons!
 
-Original card images by Daniel Fowler on Tek Eye:
+Craft a Giant Blackjack Chip with 20 clay ([i/s20:133]) and a black dye ([i:1050]) to access the Blackjack UI.
+You can bet ANY stackable item, which includes:
+- Coins
+- Metal Bars
+- Sand Blocks
+- Blinkroot
+- Lihzahrd Altars
+- Terra Toilets
+- and much, much more!
+
+Note that this is a simplified version of Blackjack. No support for splitting, doubling down, insurance, or surrendering.
+The dealer hits on soft 17.
+Your bet items are doubled when you win, multiplied by 2.5x when you get a Blackjack, and deleted when you lose.
+
+This mod comes with configuration options to change the UI and card scaling.
+
+Thanks to Daniel Fowler on Tek Eye for the public domain card images.
+Visit his post and view the original card images here:
 https://tekeye.uk/playing_cards/svg-playing-cards
+
+[c/FF0000:DISCLAIMER:]
+Just like in real life, in the long run, the house will always win in this mod!
+In other words, on average, you are more likely to LOSE than to win.
+This mod is made purely for the purpose of fun and entertainment, and we discourage gambling with real money.
+(U.S.) If you or someone you know has a gambling problem, help can be found at:
+https://www.ncpgambling.org/help-treatment/

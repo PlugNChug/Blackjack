@@ -1,6 +1,6 @@
 displayName = Blackjack
 author = PlugNChug
-version = 1.0
+version = 1.0.0
 homepage = https://github.com/PlugNChug/Blackjack
 hideCode = true
 buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*, Old\*
